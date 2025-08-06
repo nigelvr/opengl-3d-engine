@@ -138,8 +138,12 @@ private:
         glBufferData(GL_ARRAY_BUFFER, num_vertices*sizeof(float), vertices, GL_STATIC_DRAW);
 
         // position attribute (location = 0)
-        glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3*sizeof(float), (void*)0);
+        glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6*sizeof(float), (void*)0);
         glEnableVertexAttribArray(0);
+
+        // position attribute (location = 1)
+        glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 6*sizeof(float), (void*)0);
+        glEnableVertexAttribArray(1);
     }
 };
 
@@ -183,6 +187,9 @@ public:
     float ar;
     double yaw;
     double pitch;
+    float camSpeed;
+
+    Camera() {}
 
     Camera(glm::vec3 cPos, glm::vec3 cFront, glm::vec3 cUp, float cFov, float cAr, double cYaw, double cPitch) {
         cameraPos = cPos;
@@ -199,11 +206,8 @@ public:
     }
 
     glm::mat4 viewMatrix() {
-        auto dir = direction();
-        
         float yawRad = glm::radians(static_cast<float>(yaw));
         float pitchRad = glm::radians(static_cast<float>(pitch));
-        // glm::vec3 front;
 
         cameraFront.x = cos(yawRad) * cos(pitchRad);
         cameraFront.y = sin(pitchRad);
@@ -215,68 +219,116 @@ public:
     glm::mat4 projectionMatrix() {
         return glm::perspective(glm::radians(fov), ar, 0.1f, 100.0f);
     }
+
+    void setCamSpeed(float s) {
+        camSpeed = s;
+    }
+
+    void moveForward() {
+        cameraPos += (float)camSpeed * cameraFront;
+    }
+
+    void moveBackward() {
+        cameraPos -= (float)camSpeed * cameraFront;
+    }
+
+    void moveLeft() {
+        cameraPos += glm::normalize(glm::cross(cameraUp, cameraFront)) * (float)camSpeed * 2.5f;
+    }
+
+    void moveRight() {
+        cameraPos -= glm::normalize(glm::cross(cameraUp, cameraFront)) * (float)camSpeed * 2.5f;
+    }
+
+    void pitchUp(SDL_MouseMotionEvent motion) {
+        pitch = ((float)SCR_HEIGHT/2.0 - motion.y)/(float)SCR_HEIGHT/2.0 * 90.0f;
+    }
+
+    void pitchDown(SDL_MouseMotionEvent motion) {
+        pitch = -(motion.y - (float)SCR_HEIGHT/2.0)/(float)SCR_HEIGHT/2.0 * 90.0f;
+    }
+
+    void yawLeft(SDL_MouseMotionEvent motion) {
+        yaw = -90.0f + -180.0f * ((float)SCR_WIDTH/2.0 - motion.x)/((float)SCR_WIDTH/2.0);
+    }
+
+    void yawRight(SDL_MouseMotionEvent motion) {
+        yaw = -90.0f - -180.0f * (motion.x - (float)SCR_WIDTH/2.0)/((float)SCR_WIDTH/2.0);
+    }
 };
 
-void handleKeyboardEvent(SDL_Event event, Camera & cam, double camSpeed, bool *running, bool *cameraUpdated) {
-    switch (event.key.keysym.sym) {
-        case SDLK_ESCAPE:
-            *running = false;
-            break;
-        case SDLK_UP:
-            *cameraUpdated = true;
-            cam.cameraPos += (float)camSpeed * cam.cameraFront;
-            break;
-        case SDLK_DOWN:
-            *cameraUpdated = true;
-            cam.cameraPos -= (float)camSpeed * cam.cameraFront;
-            break;
-        case SDLK_LEFT:
-            *cameraUpdated = true;
-            cam.cameraPos += glm::normalize(glm::cross(cam.cameraUp, cam.cameraFront)) * (float)camSpeed * 2.5f;
-            break;
-        case SDLK_RIGHT:
-            *cameraUpdated = true;
-            cam.cameraPos -= glm::normalize(glm::cross(cam.cameraUp, cam.cameraFront)) * (float)camSpeed * 2.5f;
-            break;
-    }
-}
+class InputHandler {
+public:
+    bool running;
+    bool cameraUpdated;
+    Camera & cam;
 
-void processInput(Camera & cam, double camSpeed, bool *running, bool *cameraUpdated) {
-    SDL_Event event;
-    while (SDL_PollEvent(&event)) {
-        if (event.type == SDL_QUIT) {
-            *running = false;
-        } else if (event.type == SDL_KEYDOWN) {
-            handleKeyboardEvent(event, cam, camSpeed, running, cameraUpdated);
-        } else if (event.type == SDL_MOUSEMOTION) {
-            SDL_MouseMotionEvent& motion = event.motion;
+    InputHandler(Camera & cCam) : cam(cCam), running(true), cameraUpdated(false) {}
 
-            if (motion.y <= SCR_HEIGHT/2) {
-                *cameraUpdated = true;
-                cam.pitch = ((float)SCR_HEIGHT/2.0 - motion.y)/(float)SCR_HEIGHT/2.0 * 90.0f;
-            } else {
-                *cameraUpdated = true;
-                cam.pitch = -(motion.y - (float)SCR_HEIGHT/2.0)/(float)SCR_HEIGHT/2.0 * 90.0f;
-            }
-
-            if (motion.x <= SCR_WIDTH/2) {
-                *cameraUpdated = true;
-                cam.yaw = -90.0f + -180.0f * ((float)SCR_WIDTH/2.0 - motion.x)/((float)SCR_WIDTH/2.0);
-            } else {
-                *cameraUpdated = true;
-                cam.yaw = -90.0f - -180.0f * (motion.x - (float)SCR_WIDTH/2.0)/((float)SCR_WIDTH/2.0);
+    void processInput() {
+        SDL_Event event;
+        while (SDL_PollEvent(&event)) {
+            if (event.type == SDL_QUIT) {
+                running = false;
+            } else if (event.type == SDL_KEYDOWN) {
+                handleKeyboardEvent(event);
+            } else if (event.type == SDL_MOUSEMOTION) {
+            handleMouseEvent(event);
             }
         }
     }
-}
+
+    void handleMouseEvent(SDL_Event event) {
+        SDL_MouseMotionEvent& motion = event.motion;
+
+        if (motion.y <= SCR_HEIGHT/2) {
+            cameraUpdated = true;
+            cam.pitchUp(motion);
+        } else {
+            cameraUpdated = true;
+            cam.pitchDown(motion);
+        }
+
+        if (motion.x <= SCR_WIDTH/2) {
+            cameraUpdated = true;
+            cam.yawLeft(motion);
+        } else {
+            cameraUpdated = true;
+            cam.yawRight(motion);
+        }
+    }
+
+    void handleKeyboardEvent(SDL_Event event) {
+        switch (event.key.keysym.sym) {
+            case SDLK_ESCAPE:
+                running = false;
+                break;
+            case SDLK_UP:
+                cameraUpdated = true;
+                cam.moveForward();
+                break;
+            case SDLK_DOWN:
+                cameraUpdated = true;
+                cam.moveBackward();
+                break;
+            case SDLK_LEFT:
+                cameraUpdated = true;
+                cam.moveLeft();
+                break;
+            case SDLK_RIGHT:
+                cameraUpdated = true;
+                cam.moveRight();
+                break;
+        }
+    }
+};
 
 class Cube {
 public:
     float sideLength;
     glm::vec3 pos;
     glm::vec3 color;
-    Cube(float cubeSideLength, glm::vec3 cubePos, glm::vec3 cubeColor) {
-        sideLength = cubeSideLength;
+    Cube(glm::vec3 cubePos, glm::vec3 cubeColor) {
         pos = cubePos;
         color = cubeColor;
     }
@@ -325,10 +377,14 @@ int main(int argc, char* argv[]) {
     // light and box color
     auto objectColor = glm::vec3(1.0f, 0.5f, 0.31f);
     auto lightColor = glm::vec3(1.0f, 1.0f, 1.0f);
+    glm::vec3 lightPos(0.0f, 0.0f, 1.0f);
+    unsigned int colorOverrideLoc = glGetUniformLocation(shader.shaderId, "colorOverride");
     unsigned int objectColorLoc = glGetUniformLocation(shader.shaderId, "objectColor");
     unsigned int lightColorLoc = glGetUniformLocation(shader.shaderId, "lightColor");
+    unsigned int lightPosLoc = glGetUniformLocation(shader.shaderId, "lightPos");
     glUniform3f(objectColorLoc, objectColor.x, objectColor.y, objectColor.z);
     glUniform3f(lightColorLoc, lightColor.x, lightColor.y, lightColor.z);
+    glUniform3f(lightPosLoc, lightPos.x, lightPos.y, lightPos.z);
 
     // cube positions
     glm::vec3 cubePositions[] = {
@@ -336,21 +392,23 @@ int main(int argc, char* argv[]) {
     };
     int numBoxes = sizeof(cubePositions)/sizeof(cubePositions[0]);
 
+    InputHandler ih(camera);
+
     // === Render Loop ===
-    bool running = true;
-    bool cameraUpdated;
-    SDL_Event event;
     int curTick, lastTick=0, deltaTick;
     double deltaTime = 0.1f;
-    while (running) {
+    while (ih.running) {
         curTick = SDL_GetTicks();
         deltaTick = curTick-lastTick;
         lastTick = curTick;
 
         deltaTime = (float)deltaTick/1000.0f;
 
-        processInput(camera, deltaTime, &running, &cameraUpdated);
-        if (cameraUpdated) {
+        camera.setCamSpeed(deltaTime);
+
+        // processInput(camera, deltaTime, &running, &cameraUpdated);
+        ih.processInput();
+        if (ih.cameraUpdated) {
             view = camera.viewMatrix();
             glUniformMatrix4fv(viewLoc, 1, GL_FALSE, glm::value_ptr(view));
         }
@@ -361,9 +419,27 @@ int main(int argc, char* argv[]) {
         float time = SDL_GetTicks() / 1000.0f;  // seconds since start
         float angle = time;                     // rotate 1 radian per second
 
-        glBindVertexArray(vertexData.VAO);
+        // draw the lamp
         unsigned int modelLoc;
+        glUniform3f(colorOverrideLoc, 1.0f, 1.0f, 1.0f);
+        modelLoc = glGetUniformLocation(shader.shaderId, "model");
+        model = glm::mat4(1.0f);
+        model = glm::rotate(model, glm::radians(30.0f), glm::cross(glm::vec3(1.0f, 0.0f, 0.0f), cubePositions[0]));
+        model = glm::translate(model, lightPos);
+        model = glm::scale(model, glm::vec3(0.2f));
+        auto tempLight = glm::vec4(lightPos.x, lightPos.y, lightPos.z, 0.0f);
+        tempLight = model * tempLight;
+        //lightPos = glm::vec3(tempLight.x, tempLight.y, tempLight.z);
+        glUniform3f(lightPosLoc, tempLight.x, tempLight.y, tempLight.z);
+        glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
+        glDrawArrays(GL_TRIANGLES, 0, 36);
+
+
+        glBindVertexArray(vertexData.VAO);
         for (int k = 0; k < numBoxes; k++) {
+            glUniform3f(lightPosLoc, tempLight.x, tempLight.y, tempLight.z);
+            glUniform3f(colorOverrideLoc, 0.0f, 0.0f, 0.0f);
+            glUniform3f(objectColorLoc, objectColor.x, objectColor.y, objectColor.z);
             modelLoc = glGetUniformLocation(shader.shaderId, "model");
             model = glm::mat4(1.0f);
             model = glm::translate(model, cubePositions[k]);
