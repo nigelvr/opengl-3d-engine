@@ -254,11 +254,11 @@ public:
     }
 
     void pitchUp(SDL_MouseMotionEvent motion) {
-        pitch = ((float)SCR_HEIGHT/2.0 - motion.y)/(float)SCR_HEIGHT/2.0 * 90.0f;
+        pitch = ((float)SCR_HEIGHT/2.0 - motion.y)/(float)SCR_HEIGHT/2.0 * 180.0f;
     }
 
     void pitchDown(SDL_MouseMotionEvent motion) {
-        pitch = -(motion.y - (float)SCR_HEIGHT/2.0)/(float)SCR_HEIGHT/2.0 * 90.0f;
+        pitch = -(motion.y - (float)SCR_HEIGHT/2.0)/(float)SCR_HEIGHT/2.0 * 180.0f;
     }
 
     void yawLeft(SDL_MouseMotionEvent motion) {
@@ -341,10 +341,24 @@ public:
     float sideLength;
     glm::vec3 pos;
     glm::vec3 color;
-    VertexData vertexData;
+    VertexData & vertexData;
+    Shader & shader;
 
-    Cube(glm::vec3 cubePos, glm::vec3 cubeColor, VertexData vd) : 
-        pos(cubePos), color(cubeColor), vertexData(vd) {}
+    Cube(glm::vec3 cubePos, glm::vec3 cubeColor, VertexData & vd, Shader & cubeShader) : 
+        pos(cubePos), color(cubeColor), vertexData(vd), shader(cubeShader) {}
+
+    glm::mat4 model() {
+        auto m = glm::mat4(1.0f);
+        m = glm::translate(m, pos);
+        return m;
+    }
+
+    void draw() {
+        shader.installM4("model", model());
+        shader.installVec3("colorOverride", glm::vec3(0.0f, 0.0f, 0.0f));
+        shader.installVec3("objectColor", color);
+        glDrawArrays(GL_TRIANGLES, 0, 36);
+    }
 };
 
 int main(int argc, char* argv[]) {
@@ -356,7 +370,6 @@ int main(int argc, char* argv[]) {
     SDL_GLContext context = SDL_GL_CreateContext(window);
     glewExperimental = GL_TRUE;
     glewInit();
-    
 
     glEnable(GL_DEPTH_TEST);  
 
@@ -392,13 +405,14 @@ int main(int argc, char* argv[]) {
     shader.installVec3("objectColor", objectColor);
     shader.installVec3("lightColor", lightColor);
     shader.installVec3("lightPos", lightPos);
-
-    // cube positions
-    glm::vec3 cubePositions[] = {
-        glm::vec3( 0.0f,  0.0f, -2.0f)
+    
+    // our world
+    Cube cubes[] = {
+        Cube(glm::vec3( 0.0f,  0.0f, -2.0f), glm::vec3(1.0f, 0.5f, 0.31f), vertexData, shader)
     };
-    int numBoxes = sizeof(cubePositions)/sizeof(cubePositions[0]);
+    int numCubes = sizeof(cubes)/sizeof(cubes[0]);
 
+    // input handler
     InputHandler ih(camera);
 
     // === Render Loop ===
@@ -427,28 +441,18 @@ int main(int argc, char* argv[]) {
 
         // draw the lamp
         model = glm::mat4(1.0f);
-        model = glm::rotate(model, glm::radians(30.0f), glm::cross(glm::vec3(1.0f, 0.0f, 0.0f), cubePositions[0]));
-        model = glm::translate(model, lightPos);
         model = glm::scale(model, glm::vec3(0.2f));
+        model = glm::rotate(model, glm::radians(30.0f), glm::vec3(0.0f, 1.0f, 0.0f));
+        model = glm::translate(model, glm::vec3(25.0f, 0.0f, 0.0f));
+        
         shader.installM4("model", model);
         shader.installVec3("colorOverride", glm::vec3(1.0f, 1.0f, 1.0f));
 
-        auto tempLight = glm::vec4(lightPos.x, lightPos.y, lightPos.z, 0.0f);
-        tempLight = model * tempLight;
-
-        shader.installVec3("lightPos", tempLight);
+        shader.installVec3("lightPos", lightPos);
         glDrawArrays(GL_TRIANGLES, 0, 36);
 
-        for (int k = 0; k < numBoxes; k++) {
-            model = glm::mat4(1.0f);
-            model = glm::translate(model, cubePositions[k]);
-
-            shader.installVec3("lightPos", tempLight);
-            shader.installVec3("colorOverride", glm::vec3(0.0f, 0.0f, 0.0f));
-            shader.installVec3("objectColor", objectColor);
-            shader.installM4("model", model);
-
-            glDrawArrays(GL_TRIANGLES, 0, 36);
+        for (int k = 0; k < numCubes; k++) {
+            cubes[k].draw();
         }
 
         SDL_GL_SwapWindow(window);
