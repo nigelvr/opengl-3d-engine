@@ -1,9 +1,8 @@
 #include <stdio.h>
-#include <SDL2/SDL.h>
-
-#include <stb_image.h>
-
 #include <utility>
+#include <string>
+
+#include <SDL2/SDL.h>
 
 #include <GL/glew.h>
 
@@ -12,6 +11,8 @@
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
+
+#include <stb_image.h>
 
 #define SCR_WIDTH 800
 #define SCR_HEIGHT 600
@@ -72,6 +73,18 @@ public:
 
     void use() {
         glUseProgram(shaderId);
+    }
+
+    unsigned int getLocationPtr(std::string name) {
+        return glGetUniformLocation(shaderId, name.c_str());
+    }
+
+    void installM4(std::string name, glm::mat4 mat) {
+        glUniformMatrix4fv(getLocationPtr(name), 1, GL_FALSE, glm::value_ptr(mat));
+    }
+
+    void installVec3(std::string name, glm::vec3 v) {
+        glUniform3f(getLocationPtr(name), v.x, v.y, v.z);
     }
 };
 
@@ -328,10 +341,10 @@ public:
     float sideLength;
     glm::vec3 pos;
     glm::vec3 color;
-    Cube(glm::vec3 cubePos, glm::vec3 cubeColor) {
-        pos = cubePos;
-        color = cubeColor;
-    }
+    VertexData vertexData;
+
+    Cube(glm::vec3 cubePos, glm::vec3 cubeColor, VertexData vd) : 
+        pos(cubePos), color(cubeColor), vertexData(vd) {}
 };
 
 int main(int argc, char* argv[]) {
@@ -363,28 +376,22 @@ int main(int argc, char* argv[]) {
     float ar = (float)SCR_WIDTH / (float)SCR_HEIGHT;
     Camera camera(cameraPos, cameraFront, cameraUp, fov, ar, yaw, pitch);
 
-    // compute view and proj matrices
-    // model is computed in the render loop
+    // compute view, proj and model matrices
+    // initialize model to be the identy matrix. update in the loop
     glm::mat4 view = camera.viewMatrix();
     glm::mat4 projection = camera.projectionMatrix();
-    unsigned int viewLoc  = glGetUniformLocation(shader.shaderId, "view");
-    unsigned int projectionLoc = glGetUniformLocation(shader.shaderId, "projection");
-    glUniformMatrix4fv(viewLoc, 1, GL_FALSE, glm::value_ptr(view));
-    glUniformMatrix4fv(projectionLoc, 1, GL_FALSE, glm::value_ptr(projection));
-    // initialize the model matrix
-    glm::mat4 model;
+    glm::mat4 model = glm::mat4(1.0f);
+    shader.installM4("view", view);
+    shader.installM4("projection", projection);
+    shader.installM4("model", model);
 
     // light and box color
     auto objectColor = glm::vec3(1.0f, 0.5f, 0.31f);
     auto lightColor = glm::vec3(1.0f, 1.0f, 1.0f);
     glm::vec3 lightPos(0.0f, 0.0f, 1.0f);
-    unsigned int colorOverrideLoc = glGetUniformLocation(shader.shaderId, "colorOverride");
-    unsigned int objectColorLoc = glGetUniformLocation(shader.shaderId, "objectColor");
-    unsigned int lightColorLoc = glGetUniformLocation(shader.shaderId, "lightColor");
-    unsigned int lightPosLoc = glGetUniformLocation(shader.shaderId, "lightPos");
-    glUniform3f(objectColorLoc, objectColor.x, objectColor.y, objectColor.z);
-    glUniform3f(lightColorLoc, lightColor.x, lightColor.y, lightColor.z);
-    glUniform3f(lightPosLoc, lightPos.x, lightPos.y, lightPos.z);
+    shader.installVec3("objectColor", objectColor);
+    shader.installVec3("lightColor", lightColor);
+    shader.installVec3("lightPos", lightPos);
 
     // cube positions
     glm::vec3 cubePositions[] = {
@@ -406,11 +413,10 @@ int main(int argc, char* argv[]) {
 
         camera.setCamSpeed(deltaTime);
 
-        // processInput(camera, deltaTime, &running, &cameraUpdated);
         ih.processInput();
         if (ih.cameraUpdated) {
             view = camera.viewMatrix();
-            glUniformMatrix4fv(viewLoc, 1, GL_FALSE, glm::value_ptr(view));
+            shader.installM4("view", view);
         }
 
         glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
@@ -420,30 +426,28 @@ int main(int argc, char* argv[]) {
         float angle = time;                     // rotate 1 radian per second
 
         // draw the lamp
-        unsigned int modelLoc;
-        glUniform3f(colorOverrideLoc, 1.0f, 1.0f, 1.0f);
-        modelLoc = glGetUniformLocation(shader.shaderId, "model");
         model = glm::mat4(1.0f);
         model = glm::rotate(model, glm::radians(30.0f), glm::cross(glm::vec3(1.0f, 0.0f, 0.0f), cubePositions[0]));
         model = glm::translate(model, lightPos);
         model = glm::scale(model, glm::vec3(0.2f));
+        shader.installM4("model", model);
+        shader.installVec3("colorOverride", glm::vec3(1.0f, 1.0f, 1.0f));
+
         auto tempLight = glm::vec4(lightPos.x, lightPos.y, lightPos.z, 0.0f);
         tempLight = model * tempLight;
-        //lightPos = glm::vec3(tempLight.x, tempLight.y, tempLight.z);
-        glUniform3f(lightPosLoc, tempLight.x, tempLight.y, tempLight.z);
-        glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
+
+        shader.installVec3("lightPos", tempLight);
         glDrawArrays(GL_TRIANGLES, 0, 36);
 
-
-        glBindVertexArray(vertexData.VAO);
         for (int k = 0; k < numBoxes; k++) {
-            glUniform3f(lightPosLoc, tempLight.x, tempLight.y, tempLight.z);
-            glUniform3f(colorOverrideLoc, 0.0f, 0.0f, 0.0f);
-            glUniform3f(objectColorLoc, objectColor.x, objectColor.y, objectColor.z);
-            modelLoc = glGetUniformLocation(shader.shaderId, "model");
             model = glm::mat4(1.0f);
             model = glm::translate(model, cubePositions[k]);
-            glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
+
+            shader.installVec3("lightPos", tempLight);
+            shader.installVec3("colorOverride", glm::vec3(0.0f, 0.0f, 0.0f));
+            shader.installVec3("objectColor", objectColor);
+            shader.installM4("model", model);
+
             glDrawArrays(GL_TRIANGLES, 0, 36);
         }
 
