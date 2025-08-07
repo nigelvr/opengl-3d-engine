@@ -338,18 +338,19 @@ public:
 
 class Cube {
 public:
-    float sideLength;
     glm::vec3 pos;
     glm::vec3 color;
+    float scale;
     VertexData & vertexData;
     Shader & shader;
 
-    Cube(glm::vec3 cubePos, glm::vec3 cubeColor, VertexData & vd, Shader & cubeShader) : 
-        pos(cubePos), color(cubeColor), vertexData(vd), shader(cubeShader) {}
+    Cube(glm::vec3 cubePos, glm::vec3 cubeColor, float cubeScale, VertexData & vd, Shader & cubeShader) : 
+        pos(cubePos), color(cubeColor), vertexData(vd), shader(cubeShader), scale(cubeScale) {}
 
     glm::mat4 model() {
         auto m = glm::mat4(1.0f);
         m = glm::translate(m, pos);
+        m = glm::scale(m, glm::vec3(scale));
         return m;
     }
 
@@ -361,15 +362,14 @@ public:
     }
 };
 
-class Lamp : Cube {
+class Lamp : public Cube {
 public:
-    Lamp(glm::vec3 pos, VertexData & vd, Shader & shader) : Cube(pos, glm::vec3(1.0f,1.0f,1.0f), vd, shader) {}
+    Lamp(glm::vec3 pos, VertexData & vd, Shader & shader) : Cube(pos, glm::vec3(1.0f,1.0f,1.0f), 0.2f, vd, shader) {}
 
     glm::mat4 model() {
         auto m = glm::mat4(1.0f);
         m = glm::scale(m, glm::vec3(0.2f));
-        m = glm::rotate(m, glm::radians(30.0f), glm::vec3(0.0f, 1.0f, 0.0f));
-        m = glm::translate(m, glm::vec3(25.0f, 0.0f, 0.0f));
+        m = glm::translate(m, pos);
         return m;
     }
 
@@ -405,10 +405,10 @@ int main(int argc, char* argv[]) {
     shader.use();
 
     // Camera and matricies
-    glm::vec3 cameraPos = glm::vec3(-2.466283f, 0.000000f, 2.922494f);
+    glm::vec3 cameraPos = glm::vec3(-5.086209f, 0.003457f, -2.374545f);
     glm::vec3 cameraFront = glm::vec3(0.0f, 0.0f, -1.0f);
     glm::vec3 cameraUp = glm::vec3(0.0f, 1.0f, 0.0f);
-    double yaw = -64.35f;
+    double yaw = 1.35f;
     double pitch = 0.0f;
     float fov = 45.0f;
     float ar = (float)SCR_WIDTH / (float)SCR_HEIGHT;
@@ -433,11 +433,12 @@ int main(int argc, char* argv[]) {
     
     // our world
     Cube cubes[] = {
-        Cube(glm::vec3( 0.0f,  0.0f, -2.0f), glm::vec3(1.0f, 0.5f, 0.31f), vertexData, shader)
+        Cube(glm::vec3( 0.0f,  0.0f, 0.0f), glm::vec3(1.0f, 0.5f, 0.31f), 1.0f, vertexData, shader),
+        Cube(glm::vec3( 0.0f,  0.0f, -2.0f), glm::vec3(1.0f, 0.5f, 0.31f), 0.2f, vertexData, shader)
     };
     int numCubes = sizeof(cubes)/sizeof(cubes[0]);
     Lamp lightSources[] = {
-        Lamp(glm::vec3(0.0f, 0.0f, 1.0f), vertexData, shader)
+        // Lamp(glm::vec3(0.0f, 0.0f, -2.0f), vertexData, shader)
     };
 
     // input handler
@@ -448,6 +449,7 @@ int main(int argc, char* argv[]) {
     double deltaTime = 0.1f;
 
     while (ih.running) {
+        printf("cam = %f %f %f ; yaw = %f\n", camera.cameraPos.x, camera.cameraPos.y, camera.cameraPos.z, camera.yaw);
         curTick = SDL_GetTicks();
         // set cam speed
         deltaTick = curTick-lastTick;
@@ -462,7 +464,15 @@ int main(int argc, char* argv[]) {
         }
         // clear screen before drawing
         clearScreen();
+        // update the world
+        // move the lamp up and down
+        int tick = SDL_GetTicks();
+        float time = tick/1000.0f;
+        // ???
         // draw the world
+        cubes[1].pos.x = sin(time);
+        cubes[1].pos.z = cos(time);
+        
         for (auto & lightSource : lightSources) {
             lightSource.draw();
         }

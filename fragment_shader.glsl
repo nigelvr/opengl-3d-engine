@@ -15,7 +15,7 @@ void main()
 		FragColor = vec4(colorOverride, 1.0f);
 	} else {
 		// ambient
-		vec3 ambient = 0.4f * lightColor;
+		vec3 ambient = 0.1f * lightColor;
 
 		// diffuse
 		vec3 lightDir = normalize(lightPos - fragPos);
