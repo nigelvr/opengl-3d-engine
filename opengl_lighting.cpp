@@ -86,6 +86,20 @@ public:
     void installVec3(std::string name, glm::vec3 v) {
         glUniform3f(getLocationPtr(name), v.x, v.y, v.z);
     }
+
+    void installVec3A(std::string name, glm::vec3 *a, int size) {
+        if (size > 0) {
+            glUniform3fv(getLocationPtr(name), size, glm::value_ptr(a[0]));
+        }
+    }
+
+    void installInt(std::string name, int i) {
+        glUniform1i(getLocationPtr(name), i);
+    }
+
+    void installBool(std::string name, bool b) {
+        installInt(name, b);
+    }
 };
 
 class VertexData {
@@ -356,8 +370,8 @@ public:
 
     void draw() {
         shader.installM4("model", model());
-        shader.installVec3("colorOverride", glm::vec3(0.0f, 0.0f, 0.0f));
         shader.installVec3("objectColor", color);
+        shader.installBool("isLamp", false);
         glDrawArrays(GL_TRIANGLES, 0, 36);
     }
 };
@@ -365,11 +379,13 @@ public:
 class Lamp : public Cube {
 public:
     Lamp(glm::vec3 pos, VertexData & vd, Shader & shader) : Cube(pos, glm::vec3(1.0f,1.0f,1.0f), 0.2f, vd, shader) {}
+    Lamp(glm::vec3 pos, glm::vec3 color, VertexData & vd, Shader & shader) : Cube(pos, color, 0.2f, vd, shader) {}
 
     void draw() {
         shader.installM4("model", model());
-        shader.installVec3("colorOverride", glm::vec3(1.0f, 1.0f, 1.0f));
         shader.installVec3("lightPos", pos);
+        shader.installVec3("lightColor", color);
+        shader.installBool("isLamp", true);
         glDrawArrays(GL_TRIANGLES, 0, 36);
     }
 };
@@ -377,6 +393,15 @@ public:
 void clearScreen() {
     glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+}
+
+void updateLights(Lamp *lamps, int numLights, Shader & shader) {
+    glm::vec3 *lightPositions = new glm::vec3[numLights];
+    for (int i = 0; i < numLights; i++) {
+        lightPositions[i] = lamps[i].pos;
+    }
+    shader.installVec3A("lightSources", lightPositions, numLights);
+    delete lightPositions;
 }
 
 int main(int argc, char* argv[]) {
@@ -431,8 +456,18 @@ int main(int argc, char* argv[]) {
     };
     int numCubes = sizeof(cubes)/sizeof(cubes[0]);
     Lamp lightSources[] = {
-        Lamp(glm::vec3(0.0f, 0.0f, -2.0f), vertexData, shader)
+        //Lamp(glm::vec3(0.0f, 0.0f, -2.0f), vertexData, shader),
+        Lamp(glm::vec3(0.0f, -1.0f, 0.0f), vertexData, shader),
+        Lamp(glm::vec3(0.0f, 2.0f, 0.0f), vertexData, shader)
     };
+    int numLights = sizeof(lightSources)/sizeof(lightSources[0]);
+    shader.installInt("numLights", numLights);
+    /* glm::vec3 *lightPositions = new glm::vec3[numLights];
+    for (int i = 0; i < numLights; i++) {
+        lightPositions[i] = lightSources[i].pos;
+    }
+    shader.installVec3A("lightSources", lightPositions, numLights); */
+    updateLights(lightSources, numLights, shader);
 
     // input handler
     InputHandler ih(camera);
@@ -461,11 +496,10 @@ int main(int argc, char* argv[]) {
         // move the lamp up and down
         int tick = SDL_GetTicks();
         float time = tick/1000.0f;
-        // ???
+        lightSources[0].pos = glm::vec3(sin(2.0f*time), 0.0f, cos(2.0f*time));
+        lightSources[1].pos = glm::vec3(0.0f, sin(2.0f*time), cos(2.0f*time));
         // draw the world
-        lightSources[0].pos.x = sin(time);
-        lightSources[0].pos.z = cos(time);
-        
+        updateLights(lightSources, numLights, shader);
         for (auto & lightSource : lightSources) {
             lightSource.draw();
         }

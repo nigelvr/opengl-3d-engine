@@ -4,22 +4,32 @@ out vec4 FragColor;
 in vec3 fragPos;
 in vec3 outNormal;
 
-uniform vec3 colorOverride;
+#define MAX_LIGHTS 16
+uniform vec3 lightSources[MAX_LIGHTS];
+
+uniform int numLights;
+uniform bool isLamp;
 uniform vec3 lightPos;
 uniform vec3 objectColor;
 uniform vec3 lightColor;
 
 void main()
 {
-	if (colorOverride != vec3(0.0f, 0.0f, 0.0f)) {
-		FragColor = vec4(colorOverride, 1.0f);
+	if (isLamp) {
+		FragColor = vec4(vec3(1.0f, 1.0f, 1.0f), 1.0f);
 	} else {
 		// ambient
 		vec3 ambient = 0.1f * lightColor;
 
+		float diff = 0.0f;
+		for (int i = 0; i < numLights; i++) {
+			vec3 lightDir = normalize(lightSources[i] - fragPos);
+			diff += max(dot(lightDir, outNormal), 0.0f);
+		}
+
 		// diffuse
-		vec3 lightDir = normalize(lightPos - fragPos);
-		float diff = max(dot(lightDir, outNormal), 0.0f);
+		//vec3 lightDir = normalize(lightPos - fragPos);
+		//float diff = max(dot(lightDir, outNormal), 0.0f);
 		vec3 diffuse = diff * lightColor;
 
 		// color
