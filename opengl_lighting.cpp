@@ -366,13 +366,6 @@ class Lamp : public Cube {
 public:
     Lamp(glm::vec3 pos, VertexData & vd, Shader & shader) : Cube(pos, glm::vec3(1.0f,1.0f,1.0f), 0.2f, vd, shader) {}
 
-    glm::mat4 model() {
-        auto m = glm::mat4(1.0f);
-        m = glm::scale(m, glm::vec3(0.2f));
-        m = glm::translate(m, pos);
-        return m;
-    }
-
     void draw() {
         shader.installM4("model", model());
         shader.installVec3("colorOverride", glm::vec3(1.0f, 1.0f, 1.0f));
@@ -434,11 +427,11 @@ int main(int argc, char* argv[]) {
     // our world
     Cube cubes[] = {
         Cube(glm::vec3( 0.0f,  0.0f, 0.0f), glm::vec3(1.0f, 0.5f, 0.31f), 1.0f, vertexData, shader),
-        Cube(glm::vec3( 0.0f,  0.0f, -2.0f), glm::vec3(1.0f, 0.5f, 0.31f), 0.2f, vertexData, shader)
+        //Cube(glm::vec3( 0.0f,  0.0f, -2.0f), glm::vec3(1.0f, 0.5f, 0.31f), 0.2f, vertexData, shader)
     };
     int numCubes = sizeof(cubes)/sizeof(cubes[0]);
     Lamp lightSources[] = {
-        // Lamp(glm::vec3(0.0f, 0.0f, -2.0f), vertexData, shader)
+        Lamp(glm::vec3(0.0f, 0.0f, -2.0f), vertexData, shader)
     };
 
     // input handler
@@ -470,8 +463,8 @@ int main(int argc, char* argv[]) {
         float time = tick/1000.0f;
         // ???
         // draw the world
-        cubes[1].pos.x = sin(time);
-        cubes[1].pos.z = cos(time);
+        lightSources[0].pos.x = sin(time);
+        lightSources[0].pos.z = cos(time);
         
         for (auto & lightSource : lightSources) {
             lightSource.draw();
