@@ -361,6 +361,31 @@ public:
     }
 };
 
+class Lamp : Cube {
+public:
+    Lamp(glm::vec3 pos, VertexData & vd, Shader & shader) : Cube(pos, glm::vec3(1.0f,1.0f,1.0f), vd, shader) {}
+
+    glm::mat4 model() {
+        auto m = glm::mat4(1.0f);
+        m = glm::scale(m, glm::vec3(0.2f));
+        m = glm::rotate(m, glm::radians(30.0f), glm::vec3(0.0f, 1.0f, 0.0f));
+        m = glm::translate(m, glm::vec3(25.0f, 0.0f, 0.0f));
+        return m;
+    }
+
+    void draw() {
+        shader.installM4("model", model());
+        shader.installVec3("colorOverride", glm::vec3(1.0f, 1.0f, 1.0f));
+        shader.installVec3("lightPos", pos);
+        glDrawArrays(GL_TRIANGLES, 0, 36);
+    }
+};
+
+void clearScreen() {
+    glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+}
+
 int main(int argc, char* argv[]) {
     SDL_Init(SDL_INIT_VIDEO);
     SDL_Window* window = SDL_CreateWindow("OpenGL Triangle",
@@ -411,6 +436,9 @@ int main(int argc, char* argv[]) {
         Cube(glm::vec3( 0.0f,  0.0f, -2.0f), glm::vec3(1.0f, 0.5f, 0.31f), vertexData, shader)
     };
     int numCubes = sizeof(cubes)/sizeof(cubes[0]);
+    Lamp lightSources[] = {
+        Lamp(glm::vec3(0.0f, 0.0f, 1.0f), vertexData, shader)
+    };
 
     // input handler
     InputHandler ih(camera);
@@ -418,41 +446,28 @@ int main(int argc, char* argv[]) {
     // === Render Loop ===
     int curTick, lastTick=0, deltaTick;
     double deltaTime = 0.1f;
+
     while (ih.running) {
         curTick = SDL_GetTicks();
+        // set cam speed
         deltaTick = curTick-lastTick;
         lastTick = curTick;
-
         deltaTime = (float)deltaTick/1000.0f;
-
         camera.setCamSpeed(deltaTime);
-
+        // get keyboard + mouse input
         ih.processInput();
         if (ih.cameraUpdated) {
             view = camera.viewMatrix();
             shader.installM4("view", view);
         }
-
-        glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
-        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
-        float time = SDL_GetTicks() / 1000.0f;  // seconds since start
-        float angle = time;                     // rotate 1 radian per second
-
-        // draw the lamp
-        model = glm::mat4(1.0f);
-        model = glm::scale(model, glm::vec3(0.2f));
-        model = glm::rotate(model, glm::radians(30.0f), glm::vec3(0.0f, 1.0f, 0.0f));
-        model = glm::translate(model, glm::vec3(25.0f, 0.0f, 0.0f));
-        
-        shader.installM4("model", model);
-        shader.installVec3("colorOverride", glm::vec3(1.0f, 1.0f, 1.0f));
-
-        shader.installVec3("lightPos", lightPos);
-        glDrawArrays(GL_TRIANGLES, 0, 36);
-
-        for (int k = 0; k < numCubes; k++) {
-            cubes[k].draw();
+        // clear screen before drawing
+        clearScreen();
+        // draw the world
+        for (auto & lightSource : lightSources) {
+            lightSource.draw();
+        }
+        for (auto & cube : cubes) {
+            cube.draw();
         }
 
         SDL_GL_SwapWindow(window);
