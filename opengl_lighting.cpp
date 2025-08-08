@@ -431,6 +431,7 @@ int main(int argc, char* argv[]) {
     float fov = 45.0f;
     float ar = (float)SCR_WIDTH / (float)SCR_HEIGHT;
     Camera camera(cameraPos, cameraFront, cameraUp, fov, ar, yaw, pitch);
+    shader.installVec3("cameraPos", camera.cameraPos);
 
     // compute view, proj and model matrices
     // initialize model to be the identy matrix. update in the loop
@@ -452,21 +453,15 @@ int main(int argc, char* argv[]) {
     // our world
     Cube cubes[] = {
         Cube(glm::vec3( 0.0f,  0.0f, 0.0f), glm::vec3(1.0f, 0.5f, 0.31f), 1.0f, vertexData, shader),
-        //Cube(glm::vec3( 0.0f,  0.0f, -2.0f), glm::vec3(1.0f, 0.5f, 0.31f), 0.2f, vertexData, shader)
     };
     int numCubes = sizeof(cubes)/sizeof(cubes[0]);
     Lamp lightSources[] = {
-        //Lamp(glm::vec3(0.0f, 0.0f, -2.0f), vertexData, shader),
         Lamp(glm::vec3(0.0f, -1.0f, 0.0f), vertexData, shader),
-        Lamp(glm::vec3(0.0f, 2.0f, 0.0f), vertexData, shader)
+        Lamp(glm::vec3(0.0f, 1.0f, 0.0f), vertexData, shader),
+        Lamp(glm::vec3(0.0f, -1.0f, 0.0f), vertexData, shader)
     };
     int numLights = sizeof(lightSources)/sizeof(lightSources[0]);
     shader.installInt("numLights", numLights);
-    /* glm::vec3 *lightPositions = new glm::vec3[numLights];
-    for (int i = 0; i < numLights; i++) {
-        lightPositions[i] = lightSources[i].pos;
-    }
-    shader.installVec3A("lightSources", lightPositions, numLights); */
     updateLights(lightSources, numLights, shader);
 
     // input handler
@@ -489,6 +484,7 @@ int main(int argc, char* argv[]) {
         if (ih.cameraUpdated) {
             view = camera.viewMatrix();
             shader.installM4("view", view);
+            shader.installVec3("cameraPos", camera.cameraPos);
         }
         // clear screen before drawing
         clearScreen();
@@ -498,6 +494,7 @@ int main(int argc, char* argv[]) {
         float time = tick/1000.0f;
         lightSources[0].pos = glm::vec3(sin(2.0f*time), 0.0f, cos(2.0f*time));
         lightSources[1].pos = glm::vec3(0.0f, sin(2.0f*time), cos(2.0f*time));
+        lightSources[2].pos = glm::vec3(sin(2.0f*time), cos(2.0f*time), 0.0f);
         // draw the world
         updateLights(lightSources, numLights, shader);
         for (auto & lightSource : lightSources) {
