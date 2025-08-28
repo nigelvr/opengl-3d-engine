@@ -300,7 +300,7 @@ public:
             } else if (event.type == SDL_KEYDOWN) {
                 handleKeyboardEvent(event);
             } else if (event.type == SDL_MOUSEMOTION) {
-            handleMouseEvent(event);
+                handleMouseEvent(event);
             }
         }
     }
@@ -390,19 +390,44 @@ public:
     }
 };
 
-void clearScreen() {
-    glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-}
+class World {
+public:
+    Camera & cam;
+    InputHandler & ih;
+    Shader & shader;
+    Lamp *lamps;
+    int numLamps;
+    Cube *cubes;
+    int numCubes;
 
-void updateLights(Lamp *lamps, int numLights, Shader & shader) {
-    glm::vec3 *lightPositions = new glm::vec3[numLights];
-    for (int i = 0; i < numLights; i++) {
-        lightPositions[i] = lamps[i].pos;
+    World(Camera & wCam, InputHandler & wIh, Shader & wShader, Lamp *wLamps, int wNumLamps, Cube *wCubes, int wNumCubes) 
+    : cam(wCam), ih(wIh), shader(wShader), lamps(wLamps), numLamps(wNumLamps), cubes(wCubes), numCubes(wNumCubes)
+    {
     }
-    shader.installVec3A("lightSources", lightPositions, numLights);
-    delete lightPositions;
-}
+
+    void clearScreen() {
+        glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    }
+
+    void updateLights() {
+        glm::vec3 *lightPositions = new glm::vec3[numLamps];
+        for (int i = 0; i < numLamps; i++) {
+            lightPositions[i] = lamps[i].pos;
+        }
+        shader.installVec3A("lightSources", lightPositions, numLamps);
+        delete lightPositions;
+    }
+
+    void draw() {
+        for (int i = 0; i < numLamps; i++) {
+            lamps[i].draw();
+        }
+        for (int i = 0; i < numCubes; i++) {
+            cubes[i].draw();
+        }
+    }
+};
 
 int main(int argc, char* argv[]) {
     SDL_Init(SDL_INIT_VIDEO);
@@ -426,7 +451,7 @@ int main(int argc, char* argv[]) {
     glm::vec3 cameraPos = glm::vec3(-5.086209f, 0.003457f, -2.374545f);
     glm::vec3 cameraFront = glm::vec3(0.0f, 0.0f, -1.0f);
     glm::vec3 cameraUp = glm::vec3(0.0f, 1.0f, 0.0f);
-    double yaw = 1.35f;
+    double yaw = 30.15f;
     double pitch = 0.0f;
     float fov = 45.0f;
     float ar = (float)SCR_WIDTH / (float)SCR_HEIGHT;
@@ -462,10 +487,11 @@ int main(int argc, char* argv[]) {
     };
     int numLights = sizeof(lightSources)/sizeof(lightSources[0]);
     shader.installInt("numLights", numLights);
-    updateLights(lightSources, numLights, shader);
 
     // input handler
     InputHandler ih(camera);
+
+    World world(camera, ih, shader, lightSources, numLights, cubes, numCubes);
 
     // === Render Loop ===
     int curTick, lastTick=0, deltaTick;
@@ -479,15 +505,18 @@ int main(int argc, char* argv[]) {
         lastTick = curTick;
         deltaTime = (float)deltaTick/1000.0f;
         camera.setCamSpeed(deltaTime);
+
         // get keyboard + mouse input
         ih.processInput();
         if (ih.cameraUpdated) {
             view = camera.viewMatrix();
             shader.installM4("view", view);
             shader.installVec3("cameraPos", camera.cameraPos);
+            ih.cameraUpdated = false;
         }
+        
         // clear screen before drawing
-        clearScreen();
+        world.clearScreen();
         // update the world
         // move the lamp up and down
         int tick = SDL_GetTicks();
@@ -495,14 +524,10 @@ int main(int argc, char* argv[]) {
         lightSources[0].pos = glm::vec3(sin(2.0f*time), 0.0f, cos(2.0f*time));
         lightSources[1].pos = glm::vec3(0.0f, sin(2.0f*time), cos(2.0f*time));
         lightSources[2].pos = glm::vec3(sin(2.0f*time), cos(2.0f*time), 0.0f);
+
         // draw the world
-        updateLights(lightSources, numLights, shader);
-        for (auto & lightSource : lightSources) {
-            lightSource.draw();
-        }
-        for (auto & cube : cubes) {
-            cube.draw();
-        }
+        world.updateLights();
+        world.draw();
 
         SDL_GL_SwapWindow(window);
         deltaTime = glfwGetTime() - deltaTime;
