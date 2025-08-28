@@ -14,6 +14,9 @@
 
 #include <stb_image.h>
 
+#include "camera.h"
+#include "input_handler.h"
+
 #define SCR_WIDTH 800
 #define SCR_HEIGHT 600
 
@@ -205,150 +208,6 @@ private:
     }
 };
 
-class Camera {
-public:
-    glm::vec3 cameraPos;
-    glm::vec3 cameraFront;
-    glm::vec3 cameraUp;
-    float fov;
-    float ar;
-    double yaw;
-    double pitch;
-    float camSpeed;
-
-    Camera() {}
-
-    Camera(glm::vec3 cPos, glm::vec3 cFront, glm::vec3 cUp, float cFov, float cAr, double cYaw, double cPitch) {
-        cameraPos = cPos;
-        cameraFront = cFront;
-        cameraUp = cUp;
-        fov = cFov;
-        ar = cAr;
-        yaw = cYaw;
-        pitch = cPitch;
-    }
-
-    glm::vec3 direction() {
-        return cameraPos + cameraFront;
-    }
-
-    glm::mat4 viewMatrix() {
-        float yawRad = glm::radians(static_cast<float>(yaw));
-        float pitchRad = glm::radians(static_cast<float>(pitch));
-
-        cameraFront.x = cos(yawRad) * cos(pitchRad);
-        cameraFront.y = sin(pitchRad);
-        cameraFront.z = sin(yawRad) * cos(pitchRad);
-
-        return glm::lookAt(cameraPos, cameraPos + cameraFront, cameraUp);
-    }
-
-    glm::mat4 projectionMatrix() {
-        return glm::perspective(glm::radians(fov), ar, 0.1f, 100.0f);
-    }
-
-    void setCamSpeed(float s) {
-        camSpeed = s;
-    }
-
-    void moveForward() {
-        cameraPos += (float)camSpeed * cameraFront;
-    }
-
-    void moveBackward() {
-        cameraPos -= (float)camSpeed * cameraFront;
-    }
-
-    void moveLeft() {
-        cameraPos += glm::normalize(glm::cross(cameraUp, cameraFront)) * (float)camSpeed * 2.5f;
-    }
-
-    void moveRight() {
-        cameraPos -= glm::normalize(glm::cross(cameraUp, cameraFront)) * (float)camSpeed * 2.5f;
-    }
-
-    void pitchUp(SDL_MouseMotionEvent motion) {
-        pitch = ((float)SCR_HEIGHT/2.0 - motion.y)/(float)SCR_HEIGHT/2.0 * 180.0f;
-    }
-
-    void pitchDown(SDL_MouseMotionEvent motion) {
-        pitch = -(motion.y - (float)SCR_HEIGHT/2.0)/(float)SCR_HEIGHT/2.0 * 180.0f;
-    }
-
-    void yawLeft(SDL_MouseMotionEvent motion) {
-        yaw = -90.0f + -180.0f * ((float)SCR_WIDTH/2.0 - motion.x)/((float)SCR_WIDTH/2.0);
-    }
-
-    void yawRight(SDL_MouseMotionEvent motion) {
-        yaw = -90.0f - -180.0f * (motion.x - (float)SCR_WIDTH/2.0)/((float)SCR_WIDTH/2.0);
-    }
-};
-
-class InputHandler {
-public:
-    bool running;
-    bool cameraUpdated;
-    Camera & cam;
-
-    InputHandler(Camera & cCam) : cam(cCam), running(true), cameraUpdated(false) {}
-
-    void processInput() {
-        SDL_Event event;
-        while (SDL_PollEvent(&event)) {
-            if (event.type == SDL_QUIT) {
-                running = false;
-            } else if (event.type == SDL_KEYDOWN) {
-                handleKeyboardEvent(event);
-            } else if (event.type == SDL_MOUSEMOTION) {
-                handleMouseEvent(event);
-            }
-        }
-    }
-
-    void handleMouseEvent(SDL_Event event) {
-        SDL_MouseMotionEvent& motion = event.motion;
-
-        if (motion.y <= SCR_HEIGHT/2) {
-            cameraUpdated = true;
-            cam.pitchUp(motion);
-        } else {
-            cameraUpdated = true;
-            cam.pitchDown(motion);
-        }
-
-        if (motion.x <= SCR_WIDTH/2) {
-            cameraUpdated = true;
-            cam.yawLeft(motion);
-        } else {
-            cameraUpdated = true;
-            cam.yawRight(motion);
-        }
-    }
-
-    void handleKeyboardEvent(SDL_Event event) {
-        switch (event.key.keysym.sym) {
-            case SDLK_ESCAPE:
-                running = false;
-                break;
-            case SDLK_UP:
-                cameraUpdated = true;
-                cam.moveForward();
-                break;
-            case SDLK_DOWN:
-                cameraUpdated = true;
-                cam.moveBackward();
-                break;
-            case SDLK_LEFT:
-                cameraUpdated = true;
-                cam.moveLeft();
-                break;
-            case SDLK_RIGHT:
-                cameraUpdated = true;
-                cam.moveRight();
-                break;
-        }
-    }
-};
 
 class Cube {
 public:
@@ -455,7 +314,7 @@ int main(int argc, char* argv[]) {
     double pitch = 0.0f;
     float fov = 45.0f;
     float ar = (float)SCR_WIDTH / (float)SCR_HEIGHT;
-    Camera camera(cameraPos, cameraFront, cameraUp, fov, ar, yaw, pitch);
+    Camera camera(cameraPos, cameraFront, cameraUp, fov, ar, yaw, pitch, SCR_WIDTH, SCR_HEIGHT);
     shader.installVec3("cameraPos", camera.cameraPos);
 
     // compute view, proj and model matrices

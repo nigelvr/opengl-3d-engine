@@ -1,9 +1,28 @@
+# Compiler and flags
+CXX      := g++
+CXXFLAGS := -g -I/usr/include/stb
+LDFLAGS  := -lSDL2 -lGL -lGLEW -lglfw -lstb
 
-all: opengl_lighting
+# Sources and objects
+SRC      := camera.cpp input_handler.cpp opengl_lighting.cpp
+OBJ      := $(SRC:.cpp=.o)
+TARGET   := opengl_lighting
 
-opengl_lighting: opengl_lighting.cpp vertex_shader.glsl fragment_shader.glsl
-	g++ opengl_lighting.cpp -g -o opengl_lighting -lSDL2 -lGL -lGLEW -lglfw -lstb -I/usr/include/stb
+# Shader files (not compiled, but included in dependencies)
+SHADERS  := vertex_shader.glsl fragment_shader.glsl
 
+# Default target
+all: $(TARGET)
+
+# Link final binary
+$(TARGET): $(OBJ)
+	$(CXX) $(OBJ) -o $@ $(LDFLAGS)
+
+# Generic rule for compiling .cpp -> .o
+%.o: %.cpp %.h
+	$(CXX) $(CXXFLAGS) -c $< -o $@
+
+# Clean up build artifacts
 .PHONY: clean
 clean:
-	rm -f opengl_lighting
+	rm -f $(OBJ) $(TARGET)
