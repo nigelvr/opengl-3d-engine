@@ -43,21 +43,38 @@ void InputHandler::handleKeyboardEvent(SDL_Event event) {
         case SDLK_ESCAPE:
             running = false;
             break;
-        case SDLK_UP:
+        case SDLK_w:
             cameraUpdated = true;
             cam.moveForward();
             break;
-        case SDLK_DOWN:
+        case SDLK_s:
             cameraUpdated = true;
             cam.moveBackward();
             break;
-        case SDLK_LEFT:
+        case SDLK_a:
             cameraUpdated = true;
             cam.moveLeft();
             break;
-        case SDLK_RIGHT:
+        case SDLK_d:
             cameraUpdated = true;
             cam.moveRight();
             break;
+        case SDLK_LEFT:
+            cameraUpdated = true;
+            cam.yaw -= 1;
+            break;
+        case SDLK_RIGHT:
+            cameraUpdated = true;
+            cam.yaw += 1;
+            break;
+        case SDLK_DOWN:
+            cameraUpdated = true;
+            cam.cameraPos.y -= 1;
+            break;
+        case SDLK_UP:
+            cameraUpdated = true;
+            cam.cameraPos.y -= 1;
+            break;
+        
     }
 }

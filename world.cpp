@@ -25,3 +25,11 @@ void World::draw() {
         cubes[i].draw();
     }
 }
+
+void World::screenShot(char *filename) {
+    char *buf = (char *)malloc(3 * cam.screenWidth * cam.screenHeight);
+    glPixelStorei(GL_PACK_ALIGNMENT, 1); // avoids row padding
+    glReadPixels(0, 0, cam.screenWidth, cam.screenHeight, GL_RGB, GL_UNSIGNED_BYTE, buf);
+    stbi_flip_vertically_on_write(1); // flip before writing
+    stbi_write_png(filename, cam.screenWidth, cam.screenHeight, 3, buf, cam.screenWidth * 3);
+}

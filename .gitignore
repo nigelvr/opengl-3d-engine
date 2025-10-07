@@ -1,3 +1,8 @@
 .vscode/
 opengl_lighting
 *.o
+*.mp4
+png/
+*.png
+*bak*
+*.trace

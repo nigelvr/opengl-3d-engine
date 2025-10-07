@@ -4,6 +4,8 @@
 
 #include <SDL2/SDL.h>
 
+// #include <SDL2/SDL_hints.h>
+
 #include <GL/glew.h>
 
 #include <GLFW/glfw3.h>
@@ -31,13 +33,13 @@ int main(int argc, char* argv[]) {
     SDL_Init(SDL_INIT_VIDEO);
     SDL_Window* window = SDL_CreateWindow("OpenGL Triangle",
         SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, SCR_WIDTH, SCR_HEIGHT,
-        SDL_WINDOW_OPENGL | SDL_WINDOW_SHOWN);    
+        SDL_WINDOW_OPENGL | SDL_WINDOW_SHOWN);
 
     SDL_GLContext context = SDL_GL_CreateContext(window);
     glewExperimental = GL_TRUE;
     glewInit();
 
-    glEnable(GL_DEPTH_TEST);  
+    glEnable(GL_DEPTH_TEST);
 
     // === Define Triangle Vertex Data ===
     VertexData vertexData("./cube.data");
@@ -45,11 +47,13 @@ int main(int argc, char* argv[]) {
     shader.compile();
     shader.use();
 
+
+
     // Camera and matricies
-    glm::vec3 cameraPos = glm::vec3(-5.086209f, 0.003457f, -2.374545f);
+    glm::vec3 cameraPos = glm::vec3(5.0f, 0.0f, 0.0f);
     glm::vec3 cameraFront = glm::vec3(0.0f, 0.0f, -1.0f);
     glm::vec3 cameraUp = glm::vec3(0.0f, 1.0f, 0.0f);
-    double yaw = 30.15f;
+    double yaw = 180.0f;
     double pitch = 0.0f;
     float fov = 45.0f;
     float ar = (float)SCR_WIDTH / (float)SCR_HEIGHT;
@@ -72,7 +76,7 @@ int main(int argc, char* argv[]) {
     shader.installVec3("objectColor", objectColor);
     shader.installVec3("lightColor", lightColor);
     shader.installVec3("lightPos", lightPos);
-    
+
     // our world
     Cube cubes[] = {
         Cube(glm::vec3( 0.0f,  0.0f, 0.0f), glm::vec3(1.0f, 0.5f, 0.31f), 1.0f, vertexData, shader),
@@ -96,7 +100,9 @@ int main(int argc, char* argv[]) {
     double deltaTime = 0.1f;
 
     while (ih.running) {
-        printf("cam = %f %f %f ; yaw = %f\n", camera.cameraPos.x, camera.cameraPos.y, camera.cameraPos.z, camera.yaw);
+        int mousex, mousey;
+        SDL_GetMouseState(&mousex, &mousey);
+        printf("cam = %f %f %f ; yaw = %f ; mouse = %d %d\n", camera.cameraPos.x, camera.cameraPos.y, camera.cameraPos.z, camera.yaw, mousex, mousey);
         curTick = SDL_GetTicks();
         // set cam speed
         deltaTick = curTick-lastTick;
@@ -107,21 +113,36 @@ int main(int argc, char* argv[]) {
         // get keyboard + mouse input
         ih.processInput();
         if (ih.cameraUpdated) {
+            char filename[256];
+            memset(filename, 0, 256);
+            sprintf(filename, "png/%f_%f_%f_%f_%f_%f.png", camera.cameraPos.x, camera.cameraPos.y, camera.cameraPos.z, camera.yaw, camera.pitch, curTick);
+
+            world.screenShot(filename);
             view = camera.viewMatrix();
             shader.installM4("view", view);
             shader.installVec3("cameraPos", camera.cameraPos);
             ih.cameraUpdated = false;
         }
-        
+
         // clear screen before drawing
         world.clearScreen();
         // update the world
         // move the lamp up and down
         int tick = SDL_GetTicks();
         float time = tick/1000.0f;
-        lightSources[0].pos = glm::vec3(sin(2.0f*time), 0.0f, cos(2.0f*time));
+
+        /* lightSources[0].pos = glm::vec3(sin(2.0f*time), 0.0f, cos(2.0f*time));
         lightSources[1].pos = glm::vec3(0.0f, sin(2.0f*time), cos(2.0f*time));
-        lightSources[2].pos = glm::vec3(sin(2.0f*time), cos(2.0f*time), 0.0f);
+        lightSources[2].pos = glm::vec3(sin(2.0f*time), cos(2.0f*time), 0.0f); */
+
+
+        //camera.yaw = glm::degrees(glm::radians(160.0f));
+        /* camera.cameraPos = glm::vec3(5*cos(time/10), 0, 5*sin(time/10));
+        view = camera.viewMatrix();
+        shader.installM4("view", view);
+        shader.installVec3("cameraPos", camera.cameraPos); */
+
+
 
         // draw the world
         world.updateLights();
@@ -137,4 +158,3 @@ int main(int argc, char* argv[]) {
 
     return 0;
 }
-

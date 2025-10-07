@@ -2,6 +2,9 @@
 #include <GL/glew.h>
 #include <glm/glm.hpp>
 
+#include <stb_image.h>
+#include <stb_image_write.h>
+
 #include "objects.h"
 #include "shader.h"
 #include "camera.h"
@@ -22,4 +25,5 @@ public:
     void clearScreen();
     void updateLights();
     void draw();
+    void screenShot(char *filename);
 };

@@ -17,12 +17,13 @@ glm::vec3 Camera::direction() {
 }
 
 glm::mat4 Camera::viewMatrix() {
-    float yawRad = glm::radians(static_cast<float>(yaw));
+    /* float yawRad = glm::radians(static_cast<float>(yaw));
     float pitchRad = glm::radians(static_cast<float>(pitch));
 
     cameraFront.x = cos(yawRad) * cos(pitchRad);
     cameraFront.y = sin(pitchRad);
-    cameraFront.z = sin(yawRad) * cos(pitchRad);
+    cameraFront.z = sin(yawRad) * cos(pitchRad); */
+    cameraFront = -cameraPos;
 
     return glm::lookAt(cameraPos, cameraPos + cameraFront, cameraUp);
 }
