@@ -1,4 +1,6 @@
 #pragma once
+#include <vector>
+
 #include <GL/glew.h>
 #include <glm/glm.hpp>
 
@@ -15,15 +17,16 @@ public:
     Camera& cam;
     InputHandler& ih;
     Shader& shader;
-    Lamp* lamps;
-    int numLamps;
-    Cube* cubes;
-    int numCubes;
+    std::vector<Lamp> lamps;
+    std::vector<Cube> cubes;
 
-    World(Camera& wCam, InputHandler& wIh, Shader& wShader, Lamp* wLamps, int wNumLamps, Cube* wCubes, int wNumCubes);
+
+    World(Camera& wCam, InputHandler& wIh, Shader& wShader);
 
     void clearScreen();
     void updateLights();
     void draw();
     void screenShot(char *filename);
+    void addLamp(Lamp l);
+    void addCube(Cube c);
 };

@@ -28,5 +28,8 @@ public:
 
 class LightingShader : public Shader {
 public:
-    LightingShader() : Shader("vertex_shader.glsl", "fragment_shader.glsl") {}
+    LightingShader() : Shader("vertex_shader.glsl", "fragment_shader.glsl") {
+        compile();
+        use();
+    }
 };

@@ -30,6 +30,17 @@
 
 
 int main(int argc, char* argv[]) {
+    bool debug = false;
+    bool screenshot = false;
+    for (int i = 0; i < argc; i++) {
+        std::string arg = argv[i];
+        if (arg == "-s" || arg == "--screenshot") {
+            screenshot = true;
+        } else if (arg == "-d" || arg == "--debug") {
+            debug = true;
+        }
+    }
+
     SDL_Init(SDL_INIT_VIDEO);
     SDL_Window* window = SDL_CreateWindow("OpenGL Triangle",
         SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, SCR_WIDTH, SCR_HEIGHT,
@@ -43,11 +54,7 @@ int main(int argc, char* argv[]) {
 
     // === Define Triangle Vertex Data ===
     VertexData vertexData("./cube.data");
-    LightingShader shader; // Shader shader("vertex_shader.glsl", "fragment_shader.glsl");
-    shader.compile();
-    shader.use();
-
-
+    LightingShader shader;
 
     // Camera and matricies
     glm::vec3 cameraPos = glm::vec3(5.0f, 0.0f, 0.0f);
@@ -77,23 +84,30 @@ int main(int argc, char* argv[]) {
     shader.installVec3("lightColor", lightColor);
     shader.installVec3("lightPos", lightPos);
 
+
+
     // our world
     Cube cubes[] = {
         Cube(glm::vec3( 0.0f,  0.0f, 0.0f), glm::vec3(1.0f, 0.5f, 0.31f), 1.0f, vertexData, shader),
     };
     int numCubes = sizeof(cubes)/sizeof(cubes[0]);
-    Lamp lightSources[] = {
+    Lamp lamps[] = {
         Lamp(glm::vec3(0.0f, -1.0f, 0.0f), vertexData, shader),
         Lamp(glm::vec3(0.0f, 1.0f, 0.0f), vertexData, shader),
         Lamp(glm::vec3(0.0f, -1.0f, 0.0f), vertexData, shader)
     };
-    int numLights = sizeof(lightSources)/sizeof(lightSources[0]);
+    int numLights = sizeof(lamps)/sizeof(lamps[0]);
     shader.installInt("numLights", numLights);
 
     // input handler
     InputHandler ih(camera);
-
-    World world(camera, ih, shader, lightSources, numLights, cubes, numCubes);
+    World world(camera, ih, shader);
+    for (auto l : lamps) {
+        world.addLamp(l);
+    }
+    for (auto c : cubes) {
+        world.addCube(c);
+    }
 
     // === Render Loop ===
     int curTick, lastTick=0, deltaTick;
@@ -102,7 +116,9 @@ int main(int argc, char* argv[]) {
     while (ih.running) {
         int mousex, mousey;
         SDL_GetMouseState(&mousex, &mousey);
-        printf("cam = %f %f %f ; yaw = %f ; mouse = %d %d\n", camera.cameraPos.x, camera.cameraPos.y, camera.cameraPos.z, camera.yaw, mousex, mousey);
+        if (debug) {
+            printf("cam = %f %f %f ; yaw = %f ; mouse = %d %d\n", camera.cameraPos.x, camera.cameraPos.y, camera.cameraPos.z, camera.yaw, mousex, mousey);
+        }
         curTick = SDL_GetTicks();
         // set cam speed
         deltaTick = curTick-lastTick;
@@ -113,38 +129,20 @@ int main(int argc, char* argv[]) {
         // get keyboard + mouse input
         ih.processInput();
         if (ih.cameraUpdated) {
-            char filename[256];
-            memset(filename, 0, 256);
-            sprintf(filename, "png/%f_%f_%f_%f_%f_%f.png", camera.cameraPos.x, camera.cameraPos.y, camera.cameraPos.z, camera.yaw, camera.pitch, curTick);
-
-            world.screenShot(filename);
+            if (screenshot) {
+                char filename[256];
+                memset(filename, 0, 256);
+                sprintf(filename, "png/%f_%f_%f_%f_%f_%f.png", camera.cameraPos.x, camera.cameraPos.y, camera.cameraPos.z, camera.yaw, camera.pitch, curTick);
+                world.screenShot(filename);
+            }
             view = camera.viewMatrix();
             shader.installM4("view", view);
             shader.installVec3("cameraPos", camera.cameraPos);
             ih.cameraUpdated = false;
         }
 
-        // clear screen before drawing
+        // clear & draw
         world.clearScreen();
-        // update the world
-        // move the lamp up and down
-        int tick = SDL_GetTicks();
-        float time = tick/1000.0f;
-
-        /* lightSources[0].pos = glm::vec3(sin(2.0f*time), 0.0f, cos(2.0f*time));
-        lightSources[1].pos = glm::vec3(0.0f, sin(2.0f*time), cos(2.0f*time));
-        lightSources[2].pos = glm::vec3(sin(2.0f*time), cos(2.0f*time), 0.0f); */
-
-
-        //camera.yaw = glm::degrees(glm::radians(160.0f));
-        /* camera.cameraPos = glm::vec3(5*cos(time/10), 0, 5*sin(time/10));
-        view = camera.viewMatrix();
-        shader.installM4("view", view);
-        shader.installVec3("cameraPos", camera.cameraPos); */
-
-
-
-        // draw the world
         world.updateLights();
         world.draw();
 
