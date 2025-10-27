@@ -1,4 +1,5 @@
 #pragma once
+#include <string>
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 
@@ -19,6 +20,7 @@ public:
     Camera(glm::vec3 cPos, glm::vec3 cFront, glm::vec3 cUp,
            float cFov, float cAr, double cYaw, double cPitch,
            int cScrWidth, int cScrHeight);
+    Camera(std::string jsonPath);
 
     glm::vec3 direction();
     glm::mat4 viewMatrix();

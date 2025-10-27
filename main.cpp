@@ -56,15 +56,8 @@ int main(int argc, char* argv[]) {
     VertexData vertexData("./cube.data");
     LightingShader shader;
 
-    // Camera and matricies
-    glm::vec3 cameraPos = glm::vec3(5.0f, 0.0f, 0.0f);
-    glm::vec3 cameraFront = glm::vec3(0.0f, 0.0f, -1.0f);
-    glm::vec3 cameraUp = glm::vec3(0.0f, 1.0f, 0.0f);
-    double yaw = 180.0f;
-    double pitch = 0.0f;
-    float fov = 45.0f;
-    float ar = (float)SCR_WIDTH / (float)SCR_HEIGHT;
-    Camera camera(cameraPos, cameraFront, cameraUp, fov, ar, yaw, pitch, SCR_WIDTH, SCR_HEIGHT);
+    // Camera
+    Camera camera("config.json");
     shader.installVec3("cameraPos", camera.cameraPos);
 
     // compute view, proj and model matrices
