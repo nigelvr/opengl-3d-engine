@@ -3,19 +3,7 @@
 #include <cmath>
 #include <fstream>
 #include <iostream>
-#include <nlohmann/json.hpp>
-
-using json = nlohmann::json;
-
-json jsonData(std::string jsonPath) {
-    std::ifstream ifs(jsonPath);
-    return json::parse(ifs);
-}
-
-glm::vec3 parseVec3(json config, std::string key) {
-    const auto& arr = config[key];
-    return glm::vec3(arr[0].get<float>(), arr[1].get<float>(), arr[2].get<float>());
-}
+#include "common.h"
 
 Camera::Camera() {}
 
@@ -31,7 +19,7 @@ Camera::Camera(std::string jsonPath) {
     json config;
 
     try {
-        config = jsonData(jsonPath);
+        config = jsonData(jsonPath)["camera"];
     } catch (const json::parse_error& e) {
         std::cerr << e.what() << "\n";
         throw e;

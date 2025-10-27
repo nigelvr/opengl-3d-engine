@@ -1,6 +1,7 @@
 #include "world.h"
 
-World::World(Camera& wCam, InputHandler& wIh, Shader& wShader)
+
+World::World(Camera &wCam, InputHandler& wIh, Shader &wShader)
     : cam(wCam), ih(wIh), shader(wShader) {}
 
 void World::clearScreen() {

@@ -14,3 +14,13 @@ const char *read_file_data(const char *filename) {
 
     return (const char *)text;
 }
+
+json jsonData(std::string jsonPath) {
+    std::ifstream ifs(jsonPath);
+    return json::parse(ifs);
+}
+
+glm::vec3 parseVec3(json config, std::string key) {
+    const auto& arr = config[key];
+    return glm::vec3(arr[0].get<float>(), arr[1].get<float>(), arr[2].get<float>());
+}

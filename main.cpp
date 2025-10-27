@@ -76,7 +76,6 @@ int main(int argc, char* argv[]) {
     glm::vec3 lightPos(0.0f, 0.0f, 1.0f);
     shader.installVec3("objectColor", objectColor);
     shader.installVec3("lightColor", lightColor);
-    shader.installVec3("lightPos", lightPos);
 
     // our world
     Cube cubes[] = {
@@ -86,7 +85,6 @@ int main(int argc, char* argv[]) {
     glm::vec3 lightSources[] = {
         glm::vec3(0.0f, -1.0f, 0.0f),
         glm::vec3(0.0f, 1.0f, 0.0f),
-        glm::vec3(0.0f, -1.0f, 0.0f),
     };
     shader.installInt("numLights", sizeof(lightSources)/sizeof(lightSources[0]));
 

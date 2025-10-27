@@ -1,5 +1,6 @@
 #pragma once
 #include <vector>
+#include <memory>
 
 #include <GL/glew.h>
 #include <glm/glm.hpp>
@@ -17,11 +18,13 @@ public:
     Camera& cam;
     InputHandler& ih;
     Shader& shader;
+
     std::vector<glm::vec3> lightSources;
     std::vector<Cube> cubes;
 
 
-    World(Camera& wCam, InputHandler& wIh, Shader& wShader);
+    World(Camera &cam, InputHandler& wIh, Shader& wShader);
+    World(std::string configFile);
 
     void clearScreen();
     void updateLights();
