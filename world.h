@@ -17,7 +17,7 @@ public:
     Camera& cam;
     InputHandler& ih;
     Shader& shader;
-    std::vector<Lamp> lamps;
+    std::vector<glm::vec3> lightSources;
     std::vector<Cube> cubes;
 
 
@@ -27,6 +27,6 @@ public:
     void updateLights();
     void draw();
     void screenShot(char *filename);
-    void addLamp(Lamp l);
+    void addLightSource(glm::vec3 lightSource);
     void addCube(Cube c);
 };

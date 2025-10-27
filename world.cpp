@@ -8,8 +8,8 @@ void World::clearScreen() {
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 }
 
-void World::addLamp(Lamp l) {
-    lamps.push_back(l);
+void World::addLightSource(glm::vec3 l) {
+    lightSources.push_back(l);
 }
 
 void World::addCube(Cube c) {
@@ -17,19 +17,10 @@ void World::addCube(Cube c) {
 }
 
 void World::updateLights() {
-    int numLamps = lamps.size();
-    glm::vec3* lightPositions = new glm::vec3[numLamps];
-    for (int i = 0; i < numLamps; i++) {
-        lightPositions[i] = lamps[i].pos;
-    }
-    shader.installVec3A("lightSources", lightPositions, numLamps);
-    delete[] lightPositions;  // FIXED: must use delete[] for array
+    shader.installVec3A("lightSources", lightSources.data(), lightSources.size());
 }
 
 void World::draw() {
-    for (auto l : lamps) {
-        l.draw();
-    }
     for (auto c : cubes) {
         c.draw();
     }

@@ -43,9 +43,5 @@ vec4 getColor() {
 
 void main()
 {
-	if (isLamp) {
-		FragColor = vec4(vec3(1.0f, 1.0f, 1.0f), 1.0f);
-	} else {
-		FragColor = getColor();
-	}
+	FragColor = getColor();
 }

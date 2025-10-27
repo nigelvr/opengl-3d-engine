@@ -58,6 +58,7 @@ int main(int argc, char* argv[]) {
 
     // Camera
     Camera camera("config.json");
+    
     shader.installVec3("cameraPos", camera.cameraPos);
 
     // compute view, proj and model matrices
@@ -77,26 +78,23 @@ int main(int argc, char* argv[]) {
     shader.installVec3("lightColor", lightColor);
     shader.installVec3("lightPos", lightPos);
 
-
-
     // our world
     Cube cubes[] = {
         Cube(glm::vec3( 0.0f,  0.0f, 0.0f), glm::vec3(1.0f, 0.5f, 0.31f), 1.0f, vertexData, shader),
     };
     int numCubes = sizeof(cubes)/sizeof(cubes[0]);
-    Lamp lamps[] = {
-        Lamp(glm::vec3(0.0f, -1.0f, 0.0f), vertexData, shader),
-        Lamp(glm::vec3(0.0f, 1.0f, 0.0f), vertexData, shader),
-        Lamp(glm::vec3(0.0f, -1.0f, 0.0f), vertexData, shader)
+    glm::vec3 lightSources[] = {
+        glm::vec3(0.0f, -1.0f, 0.0f),
+        glm::vec3(0.0f, 1.0f, 0.0f),
+        glm::vec3(0.0f, -1.0f, 0.0f),
     };
-    int numLights = sizeof(lamps)/sizeof(lamps[0]);
-    shader.installInt("numLights", numLights);
+    shader.installInt("numLights", sizeof(lightSources)/sizeof(lightSources[0]));
 
     // input handler
     InputHandler ih(camera);
     World world(camera, ih, shader);
-    for (auto l : lamps) {
-        world.addLamp(l);
+    for (auto l : lightSources) {
+        world.addLightSource(l);
     }
     for (auto c : cubes) {
         world.addCube(c);
