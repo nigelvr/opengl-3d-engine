@@ -1,6 +1,6 @@
 #include "vertex_data.h"
 
-VertexData::VertexData(const char* vertexDataFilename) {
+VertexData::VertexData(std::string vertexDataFilename) {
     vertexRawData = read_file_data(vertexDataFilename);
 
     num_vertices = 0;

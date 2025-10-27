@@ -10,4 +10,4 @@ using json = nlohmann::json;
 json jsonData(std::string jsonPath);
 glm::vec3 parseVec3(json config, std::string key);
 
-const char *read_file_data(const char *);
+const char *read_file_data(std::string filename);

@@ -12,7 +12,7 @@ public:
     unsigned int VBO;
     unsigned int EBO;
 
-    VertexData(const char* vertexDataFilename);
+    VertexData(std::string vertexDataFilename);
     ~VertexData();
 
 private:

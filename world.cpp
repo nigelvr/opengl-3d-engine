@@ -1,8 +1,9 @@
 #include "world.h"
 
 
-World::World(Camera &wCam, InputHandler& wIh, Shader &wShader)
-    : cam(wCam), ih(wIh), shader(wShader) {}
+World::World(std::string jsonPath, InputHandler& wIh)
+    : cam(jsonPath), ih(wIh), shader(LightingShader()) {
+    }
 
 void World::clearScreen() {
     glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
@@ -23,7 +24,7 @@ void World::updateLights() {
 
 void World::draw() {
     for (auto c : cubes) {
-        c.draw();
+        c.draw(shader);
     }
 }
 

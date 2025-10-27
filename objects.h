@@ -6,24 +6,25 @@
 #include "shader.h"
 #include "vertex_data.h"
 
+/* class Renderable {
+public:
+    VertexData &vertexData;
+
+    Renderable(VertexData &vd);
+    virtual ~Renderable();
+    virtual glm::mat4 model();
+    virtual void draw(Shader &shader);
+}; */
+
 class Cube {
 public:
     glm::vec3 pos;
     glm::vec3 color;
     float scale;
     VertexData& vertexData;
-    Shader& shader;
 
-    Cube(glm::vec3 cubePos, glm::vec3 cubeColor, float cubeScale, VertexData& vd, Shader& cubeShader);
+    Cube(glm::vec3 cubePos, glm::vec3 cubeColor, float cubeScale, VertexData& vd);
 
     glm::mat4 model();
-    void draw();
-};
-
-class Lamp : public Cube {
-public:
-    Lamp(glm::vec3 pos, VertexData& vd, Shader& shader);
-    Lamp(glm::vec3 pos, glm::vec3 color, VertexData& vd, Shader& shader);
-
-    void draw();
+    void draw(Shader &shader);
 };

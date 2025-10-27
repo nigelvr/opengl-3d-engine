@@ -32,12 +32,16 @@
 int main(int argc, char* argv[]) {
     bool debug = false;
     bool screenshot = false;
+    std::string objpath = "./data/cube.data";
     for (int i = 0; i < argc; i++) {
         std::string arg = argv[i];
         if (arg == "-s" || arg == "--screenshot") {
             screenshot = true;
         } else if (arg == "-d" || arg == "--debug") {
             debug = true;
+        } else if (arg == "--data") {
+            assert(i+1 < argc);
+            objpath = argv[i+1];
         }
     }
 
@@ -52,51 +56,48 @@ int main(int argc, char* argv[]) {
 
     glEnable(GL_DEPTH_TEST);
 
-    // === Define Triangle Vertex Data ===
-    VertexData vertexData("./cube.data");
-    LightingShader shader;
 
-    // Camera
-    Camera camera("config.json");
-    
-    shader.installVec3("cameraPos", camera.cameraPos);
-
-    // compute view, proj and model matrices
-    // initialize model to be the identy matrix. update in the loop
-    glm::mat4 view = camera.viewMatrix();
-    glm::mat4 projection = camera.projectionMatrix();
-    glm::mat4 model = glm::mat4(1.0f);
-    shader.installM4("view", view);
-    shader.installM4("projection", projection);
-    shader.installM4("model", model);
-
-    // light and box color
-    auto objectColor = glm::vec3(1.0f, 0.5f, 0.31f);
-    auto lightColor = glm::vec3(1.0f, 1.0f, 1.0f);
-    glm::vec3 lightPos(0.0f, 0.0f, 1.0f);
-    shader.installVec3("objectColor", objectColor);
-    shader.installVec3("lightColor", lightColor);
-
+    VertexData vertexData(objpath);
     // our world
     Cube cubes[] = {
-        Cube(glm::vec3( 0.0f,  0.0f, 0.0f), glm::vec3(1.0f, 0.5f, 0.31f), 1.0f, vertexData, shader),
+        Cube(glm::vec3( 0.0f,  0.0f, 0.0f), glm::vec3(1.0f, 0.5f, 0.31f), 1.0f, vertexData),
     };
     int numCubes = sizeof(cubes)/sizeof(cubes[0]);
     glm::vec3 lightSources[] = {
         glm::vec3(0.0f, -1.0f, 0.0f),
         glm::vec3(0.0f, 1.0f, 0.0f),
     };
-    shader.installInt("numLights", sizeof(lightSources)/sizeof(lightSources[0]));
+    
+    
+    Camera camera("config.json");
 
     // input handler
     InputHandler ih(camera);
-    World world(camera, ih, shader);
+    World world("config.json", ih);
+    auto shader = world.shader;
     for (auto l : lightSources) {
         world.addLightSource(l);
     }
     for (auto c : cubes) {
         world.addCube(c);
     }
+
+    // shader variables
+    glm::mat4 view = camera.viewMatrix();
+    glm::mat4 projection = camera.projectionMatrix();
+    glm::mat4 model = glm::mat4(1.0f);
+    auto objectColor = glm::vec3(1.0f, 0.5f, 0.31f);
+    auto lightColor = glm::vec3(1.0f, 1.0f, 1.0f);
+    glm::vec3 lightPos(0.0f, 0.0f, 1.0f);
+
+    // install all the shader variables
+    shader.installVec3("cameraPos", camera.cameraPos);
+    shader.installM4("view", view);
+    shader.installM4("projection", projection);
+    shader.installM4("model", model);
+    shader.installVec3("objectColor", objectColor);
+    shader.installVec3("lightColor", lightColor);
+    shader.installInt("numLights", sizeof(lightSources)/sizeof(lightSources[0]));
 
     // === Render Loop ===
     int curTick, lastTick=0, deltaTick;

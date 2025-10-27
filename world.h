@@ -15,16 +15,16 @@
 
 class World {
 public:
-    Camera& cam;
+    Camera cam;
     InputHandler& ih;
-    Shader& shader;
+    Shader shader;
 
     std::vector<glm::vec3> lightSources;
     std::vector<Cube> cubes;
 
 
-    World(Camera &cam, InputHandler& wIh, Shader& wShader);
-    World(std::string configFile);
+    World(std::string jsonPath, InputHandler& wIh);
+    // World(std::string configFile);
 
     void clearScreen();
     void updateLights();

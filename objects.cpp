@@ -2,8 +2,8 @@
 
 // ------------------- Cube -------------------
 
-Cube::Cube(glm::vec3 cubePos, glm::vec3 cubeColor, float cubeScale, VertexData& vd, Shader& cubeShader)
-    : pos(cubePos), color(cubeColor), vertexData(vd), shader(cubeShader), scale(cubeScale) {}
+Cube::Cube(glm::vec3 cubePos, glm::vec3 cubeColor, float cubeScale, VertexData& vd)
+    : pos(cubePos), color(cubeColor), vertexData(vd), scale(cubeScale) {}
 
 glm::mat4 Cube::model() {
     auto m = glm::mat4(1.0f);
@@ -12,7 +12,7 @@ glm::mat4 Cube::model() {
     return m;
 }
 
-void Cube::draw() {
+void Cube::draw(Shader &shader) {
     shader.installM4("model", model());
     shader.installVec3("objectColor", color);
     shader.installBool("isLamp", false);
