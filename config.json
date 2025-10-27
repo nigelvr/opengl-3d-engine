@@ -1,19 +1,10 @@
 {
-    "camera_x": 5.0,
-    "camera_y": 0.0,
-    "camera_z": 0.0,
-    "camera_front_x": 0.0,
-    "camera_front_y": 0.0,
-    "camera_front_z": -1.0,
-    "camera_up_x": 0.0,
-    "camera_up_y": 1.0,
-    "camera_up_z": 0.0,
+    "camera_pos" : [5.0, 0.0, 0.0],
+    "camera_front" : [0.0, 0.0, -1.0],
+    "camera_up" : [0.0, 1.0, 0.0],
     "screen_w": 800,
     "screen_h": 600,
     "yaw": 180.0,
     "pitch": 0.0,
-    "fov": 45.0,
-    "lamps" : [
-        []
-    ]
+    "fov": 45.0
 }

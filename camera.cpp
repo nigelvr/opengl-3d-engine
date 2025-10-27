@@ -12,6 +12,11 @@ json jsonData(std::string jsonPath) {
     return json::parse(ifs);
 }
 
+glm::vec3 parseVec3(json config, std::string key) {
+    const auto& arr = config[key];
+    return glm::vec3(arr[0].get<float>(), arr[1].get<float>(), arr[2].get<float>());
+}
+
 Camera::Camera() {}
 
 Camera::Camera(glm::vec3 cPos, glm::vec3 cFront, glm::vec3 cUp,
@@ -32,9 +37,9 @@ Camera::Camera(std::string jsonPath) {
         throw e;
     }
 
-    cameraPos = glm::vec3(config["camera_x"].get<float>(), config["camera_y"].get<float>(), config["camera_z"].get<float>());
-    cameraFront = glm::vec3(config["camera_front_x"].get<float>(), config["camera_front_y"].get<float>(), config["camera_front_z"].get<float>());
-    cameraUp = glm::vec3(config["camera_up_x"].get<float>(), config["camera_up_y"].get<float>(), config["camera_up_z"].get<float>());
+    cameraPos = parseVec3(config, "camera_pos");
+    cameraFront = parseVec3(config, "camera_front");
+    cameraUp = parseVec3(config, "camera_up");
     screenWidth = config["screen_w"].get<int>();
     screenHeight = config["screen_h"].get<int>();
     ar = (float)screenWidth / (float)screenHeight;
