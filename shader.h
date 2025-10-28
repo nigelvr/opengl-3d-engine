@@ -13,6 +13,7 @@ public:
     unsigned int fragmentShaderId;
     unsigned int shaderId;
 
+    Shader();
     Shader(const char* vertexShaderFilename, const char* fragmentShaderFilename);
     ~Shader();
 

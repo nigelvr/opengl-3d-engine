@@ -1,8 +1,9 @@
 #include "input_handler.h"
+#include <iostream>
 #include <SDL2/SDL.h>
 
-InputHandler::InputHandler(Camera & cCam)
-    : cam(cCam), running(true), cameraUpdated(false)
+InputHandler::InputHandler(std::shared_ptr<Camera> cam)
+    : camera(cam), running(true), cameraUpdated(false)
 {}
 
 void InputHandler::processInput() {
@@ -21,20 +22,20 @@ void InputHandler::processInput() {
 void InputHandler::handleMouseEvent(SDL_Event event) {
     SDL_MouseMotionEvent& motion = event.motion;
 
-    if (motion.y <= cam.screenHeight / 2) {
+    if (motion.y <= camera->screenHeight / 2) {
         cameraUpdated = true;
-        cam.pitchUp(motion.y);
+        camera->pitchUp(motion.y);
     } else {
         cameraUpdated = true;
-        cam.pitchDown(motion.y);
+        camera->pitchDown(motion.y);
     }
 
-    if (motion.x <= cam.screenWidth / 2) {
+    if (motion.x <= camera->screenWidth / 2) {
         cameraUpdated = true;
-        cam.yawLeft(motion.x);
+        camera->yawLeft(motion.x);
     } else {
         cameraUpdated = true;
-        cam.yawRight(motion.x);
+        camera->yawRight(motion.x);
     }
 }
 
@@ -45,35 +46,36 @@ void InputHandler::handleKeyboardEvent(SDL_Event event) {
             break;
         case SDLK_w:
             cameraUpdated = true;
-            cam.moveForward();
+            camera->moveForward();
+            std::cout << "forward" << std::endl;
             break;
         case SDLK_s:
             cameraUpdated = true;
-            cam.moveBackward();
+            camera->moveBackward();
             break;
         case SDLK_a:
             cameraUpdated = true;
-            cam.moveLeft();
+            camera->moveLeft();
             break;
         case SDLK_d:
             cameraUpdated = true;
-            cam.moveRight();
+            camera->moveRight();
             break;
         case SDLK_LEFT:
             cameraUpdated = true;
-            cam.yaw -= 1;
+            camera->yaw -= 1;
             break;
         case SDLK_RIGHT:
             cameraUpdated = true;
-            cam.yaw += 1;
+            camera->yaw += 1;
             break;
         case SDLK_DOWN:
             cameraUpdated = true;
-            cam.cameraPos.y -= 1;
+            camera->cameraPos.y -= 1;
             break;
         case SDLK_UP:
             cameraUpdated = true;
-            cam.cameraPos.y -= 1;
+            camera->cameraPos.y -= 1;
             break;
         
     }

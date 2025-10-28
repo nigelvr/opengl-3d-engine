@@ -1,5 +1,7 @@
 #include "shader.h"
 
+Shader::Shader() {}
+
 Shader::Shader(const char* vertexShaderFilename, const char* fragmentShaderFilename) {
     vertexShaderSource = (char*)read_file_data(vertexShaderFilename);
     fragmentShaderSource = (char*)read_file_data(fragmentShaderFilename);

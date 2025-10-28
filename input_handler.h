@@ -1,4 +1,5 @@
 #pragma once
+#include <memory>
 #include <SDL2/SDL.h>
 #include "camera.h"
 
@@ -6,9 +7,9 @@ class InputHandler {
 public:
     bool running;
     bool cameraUpdated;
-    Camera & cam;
+    std::shared_ptr<Camera> camera;
 
-    InputHandler(Camera & cCam);
+    InputHandler(std::shared_ptr<Camera> cam);
 
     void processInput();
     void handleMouseEvent(SDL_Event event);

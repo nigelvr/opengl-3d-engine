@@ -26,5 +26,5 @@ public:
     Cube(glm::vec3 cubePos, glm::vec3 cubeColor, float cubeScale, VertexData& vd);
 
     glm::mat4 model();
-    void draw(Shader &shader);
+    void draw(std::shared_ptr<Shader> shader);
 };

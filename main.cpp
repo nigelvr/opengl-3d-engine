@@ -53,7 +53,6 @@ int main(int argc, char* argv[]) {
     SDL_GLContext context = SDL_GL_CreateContext(window);
     glewExperimental = GL_TRUE;
     glewInit();
-
     glEnable(GL_DEPTH_TEST);
 
 
@@ -68,13 +67,7 @@ int main(int argc, char* argv[]) {
         glm::vec3(0.0f, 1.0f, 0.0f),
     };
     
-    
-    Camera camera("config.json");
-
-    // input handler
-    InputHandler ih(camera);
-    World world("config.json", ih);
-    auto shader = world.shader;
+    World world("config.json");
     for (auto l : lightSources) {
         world.addLightSource(l);
     }
@@ -83,52 +76,52 @@ int main(int argc, char* argv[]) {
     }
 
     // shader variables
-    glm::mat4 view = camera.viewMatrix();
-    glm::mat4 projection = camera.projectionMatrix();
+    glm::mat4 view = world.camera->viewMatrix();
+    glm::mat4 projection = world.camera->projectionMatrix();
     glm::mat4 model = glm::mat4(1.0f);
     auto objectColor = glm::vec3(1.0f, 0.5f, 0.31f);
     auto lightColor = glm::vec3(1.0f, 1.0f, 1.0f);
     glm::vec3 lightPos(0.0f, 0.0f, 1.0f);
 
     // install all the shader variables
-    shader.installVec3("cameraPos", camera.cameraPos);
-    shader.installM4("view", view);
-    shader.installM4("projection", projection);
-    shader.installM4("model", model);
-    shader.installVec3("objectColor", objectColor);
-    shader.installVec3("lightColor", lightColor);
-    shader.installInt("numLights", sizeof(lightSources)/sizeof(lightSources[0]));
+    world.shader->installVec3("cameraPos", world.camera->cameraPos);
+    world.shader->installM4("view", view);
+    world.shader->installM4("projection", projection);
+    world.shader->installM4("model", model);
+    world.shader->installVec3("objectColor", objectColor);
+    world.shader->installVec3("lightColor", lightColor);
+    world.shader->installInt("numLights", sizeof(lightSources)/sizeof(lightSources[0]));
 
     // === Render Loop ===
     int curTick, lastTick=0, deltaTick;
     double deltaTime = 0.1f;
 
-    while (ih.running) {
+    while (world.ih->running) {
         int mousex, mousey;
         SDL_GetMouseState(&mousex, &mousey);
         if (debug) {
-            printf("cam = %f %f %f ; yaw = %f ; mouse = %d %d\n", camera.cameraPos.x, camera.cameraPos.y, camera.cameraPos.z, camera.yaw, mousex, mousey);
+            printf("cam = %f %f %f ; yaw = %f ; mouse = %d %d\n", world.camera->cameraPos.x, world.camera->cameraPos.y, world.camera->cameraPos.z, world.camera->yaw, mousex, mousey);
         }
         curTick = SDL_GetTicks();
         // set cam speed
         deltaTick = curTick-lastTick;
         lastTick = curTick;
         deltaTime = (float)deltaTick/1000.0f;
-        camera.setCamSpeed(deltaTime);
+        world.camera->setCamSpeed(deltaTime);
 
         // get keyboard + mouse input
-        ih.processInput();
-        if (ih.cameraUpdated) {
+        world.ih->processInput();
+        if (world.ih->cameraUpdated) {
             if (screenshot) {
                 char filename[256];
                 memset(filename, 0, 256);
-                sprintf(filename, "png/%f_%f_%f_%f_%f_%f.png", camera.cameraPos.x, camera.cameraPos.y, camera.cameraPos.z, camera.yaw, camera.pitch, curTick);
+                sprintf(filename, "png/%f_%f_%f_%f_%f_%f.png", world.camera->cameraPos.x, world.camera->cameraPos.y, world.camera->cameraPos.z, world.camera->yaw, world.camera->pitch, curTick);
                 world.screenShot(filename);
             }
-            view = camera.viewMatrix();
-            shader.installM4("view", view);
-            shader.installVec3("cameraPos", camera.cameraPos);
-            ih.cameraUpdated = false;
+            view = world.camera->viewMatrix();
+            world.shader->installM4("view", view);
+            world.shader->installVec3("cameraPos", world.camera->cameraPos);
+            world.ih->cameraUpdated = false;
         }
 
         // clear & draw

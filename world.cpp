@@ -1,9 +1,10 @@
 #include "world.h"
 
-
-World::World(std::string jsonPath, InputHandler& wIh)
-    : cam(jsonPath), ih(wIh), shader(LightingShader()) {
-    }
+World::World(std::string jsonPath) {
+    camera = std::make_shared<Camera>(jsonPath);
+    ih = std::make_shared<InputHandler>(camera);
+    shader = std::make_shared<LightingShader>();
+}
 
 void World::clearScreen() {
     glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
@@ -19,7 +20,7 @@ void World::addCube(Cube c) {
 }
 
 void World::updateLights() {
-    shader.installVec3A("lightSources", lightSources.data(), lightSources.size());
+    shader->installVec3A("lightSources", lightSources.data(), lightSources.size());
 }
 
 void World::draw() {
@@ -29,9 +30,9 @@ void World::draw() {
 }
 
 void World::screenShot(char *filename) {
-    char *buf = (char *)malloc(3 * cam.screenWidth * cam.screenHeight);
+    char *buf = (char *)malloc(3 * camera->screenWidth * camera->screenHeight);
     glPixelStorei(GL_PACK_ALIGNMENT, 1); // avoids row padding
-    glReadPixels(0, 0, cam.screenWidth, cam.screenHeight, GL_RGB, GL_UNSIGNED_BYTE, buf);
+    glReadPixels(0, 0, camera->screenWidth, camera->screenHeight, GL_RGB, GL_UNSIGNED_BYTE, buf);
     stbi_flip_vertically_on_write(1); // flip before writing
-    stbi_write_png(filename, cam.screenWidth, cam.screenHeight, 3, buf, cam.screenWidth * 3);
+    stbi_write_png(filename, camera->screenWidth, camera->screenHeight, 3, buf, camera->screenWidth * 3);
 }
