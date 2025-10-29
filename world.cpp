@@ -15,19 +15,19 @@ void World::addLightSource(glm::vec3 l) {
     lightSources.push_back(l);
 }
 
-void World::addCube(Cube c) {
+/* void World::addCube(Cube c) {
     cubes.push_back(c);
-}
+} */
 
 void World::updateLights() {
     shader->installVec3A("lightSources", lightSources.data(), lightSources.size());
 }
 
-void World::draw() {
+/* void World::draw() {
     for (auto c : cubes) {
         c.draw(shader);
     }
-}
+} */
 
 void World::screenShot(char *filename) {
     char *buf = (char *)malloc(3 * camera->screenWidth * camera->screenHeight);

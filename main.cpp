@@ -22,7 +22,8 @@
 #include "shader.h"
 #include "vertex_data.h"
 #include "texture.h"
-#include "objects.h"
+// #include "objects.h"
+#include "renderable.h"
 #include "world.h"
 
 #define SCR_WIDTH 800
@@ -56,12 +57,12 @@ int main(int argc, char* argv[]) {
     glEnable(GL_DEPTH_TEST);
 
 
-    VertexData vertexData(objpath);
+    //VertexData vertexData(objpath);
     // our world
-    Cube cubes[] = {
-        Cube(glm::vec3( 0.0f,  0.0f, 0.0f), glm::vec3(1.0f, 0.5f, 0.31f), 1.0f, vertexData),
-    };
-    int numCubes = sizeof(cubes)/sizeof(cubes[0]);
+    //Cube cubes[] = {
+    //    Cube(glm::vec3( 0.0f,  0.0f, 0.0f), glm::vec3(1.0f, 0.5f, 0.31f), 1.0f, vertexData),
+    //};
+    //int numCubes = sizeof(cubes)/sizeof(cubes[0]);
     glm::vec3 lightSources[] = {
         glm::vec3(0.0f, -1.0f, 0.0f),
         glm::vec3(0.0f, 1.0f, 0.0f),
@@ -71,15 +72,15 @@ int main(int argc, char* argv[]) {
     for (auto l : lightSources) {
         world.addLightSource(l);
     }
-    for (auto c : cubes) {
-        world.addCube(c);
-    }
+    // for (auto c : cubes) {
+    //    world.addCube(c);
+    //}
 
     // shader variables
     glm::mat4 view = world.camera->viewMatrix();
     glm::mat4 projection = world.camera->projectionMatrix();
     glm::mat4 model = glm::mat4(1.0f);
-    auto objectColor = glm::vec3(1.0f, 0.5f, 0.31f);
+    auto objectColor = glm::vec3(0.0f, 0.5f, 1.0f);
     auto lightColor = glm::vec3(1.0f, 1.0f, 1.0f);
     glm::vec3 lightPos(0.0f, 0.0f, 1.0f);
 
@@ -91,6 +92,9 @@ int main(int argc, char* argv[]) {
     world.shader->installVec3("objectColor", objectColor);
     world.shader->installVec3("lightColor", lightColor);
     world.shader->installInt("numLights", sizeof(lightSources)/sizeof(lightSources[0]));
+
+    // auto cubex = CubeX(glm::vec3( 0.0f,  0.0f, 0.0f), glm::vec3(0.0f, 0.5f, 1.0f));
+    auto cubex = WireCube(glm::vec3( 0.0f,  0.0f, 0.0f), glm::vec3(0.0f, 0.5f, 1.0f));
 
     // === Render Loop ===
     int curTick, lastTick=0, deltaTick;
@@ -127,7 +131,8 @@ int main(int argc, char* argv[]) {
         // clear & draw
         world.clearScreen();
         world.updateLights();
-        world.draw();
+        // world.draw();
+        cubex.draw(world.shader);
 
         SDL_GL_SwapWindow(window);
         deltaTime = glfwGetTime() - deltaTime;

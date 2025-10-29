@@ -8,7 +8,7 @@
 #include <stb_image.h>
 #include <stb_image_write.h>
 
-#include "objects.h"
+// #include "objects.h"
 #include "shader.h"
 #include "camera.h"
 #include "input_handler.h"
@@ -20,7 +20,7 @@ public:
     std::shared_ptr<Shader> shader;
 
     std::vector<glm::vec3> lightSources;
-    std::vector<Cube> cubes;
+    // std::vector<Cube> cubes;
 
 
     World(std::string jsonPath);
@@ -31,5 +31,5 @@ public:
     void draw();
     void screenShot(char *filename);
     void addLightSource(glm::vec3 lightSource);
-    void addCube(Cube c);
+    // void addCube(Cube c);
 };
