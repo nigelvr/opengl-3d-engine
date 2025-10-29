@@ -37,21 +37,23 @@ private:
 
 class WireCube : public Renderable {
 public:
-    WireCube(glm::vec3 position      = glm::vec3(0.0f),
-             glm::vec3 color         = glm::vec3(1.0f),
-             glm::vec3 edgeColor     = glm::vec3(0.0f),
-             float     edgeThickness = 5.0f);
+    glm::vec3 color;
+    glm::vec3 edgeColor;
+    float edgeThickness;
 
-    ~WireCube() override;
+    WireCube(glm::vec3 position,
+             glm::vec3 color,
+             glm::vec3 edgeColor,
+             float edgeThickness);
+
+    ~WireCube();
 
     void draw(std::shared_ptr<Shader> shader) override;
 
 private:
-    GLuint  VAO = 0, VBO = 0, EBO_faces = 0, EBO_edges = 0;
-    GLsizei numFaceIndices = 0, numEdgeIndices = 0;
-    glm::vec3 color;
-    glm::vec3 edgeColor;
-    float     edgeThickness;
+    unsigned int VAO_faces, VAO_edges;
+    unsigned int VBO, EBO_faces, EBO_edges;
+    int numFaceIndices, numEdgeIndices;
 
     void setupMesh();
 };

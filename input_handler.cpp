@@ -47,7 +47,6 @@ void InputHandler::handleKeyboardEvent(SDL_Event event) {
         case SDLK_w:
             cameraUpdated = true;
             camera->moveForward();
-            std::cout << "forward" << std::endl;
             break;
         case SDLK_s:
             cameraUpdated = true;

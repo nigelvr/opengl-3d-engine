@@ -55,6 +55,8 @@ int main(int argc, char* argv[]) {
     glewExperimental = GL_TRUE;
     glewInit();
     glEnable(GL_DEPTH_TEST);
+//    glDisable(GL_CULL_FACE);
+
 
 
     //VertexData vertexData(objpath);
@@ -93,8 +95,7 @@ int main(int argc, char* argv[]) {
     world.shader->installVec3("lightColor", lightColor);
     world.shader->installInt("numLights", sizeof(lightSources)/sizeof(lightSources[0]));
 
-    // auto cubex = CubeX(glm::vec3( 0.0f,  0.0f, 0.0f), glm::vec3(0.0f, 0.5f, 1.0f));
-    auto cubex = WireCube(glm::vec3( 0.0f,  0.0f, 0.0f), glm::vec3(0.0f, 0.5f, 1.0f));
+    auto cubex = WireCube(glm::vec3( 0.0f,  0.0f, 0.0f), glm::vec3(0.0f, 0.5f, 1.0f), glm::vec3(0.0f, 0.0f, 0.0f), 5.0f);
 
     // === Render Loop ===
     int curTick, lastTick=0, deltaTick;
