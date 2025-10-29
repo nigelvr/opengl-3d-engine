@@ -24,12 +24,10 @@ public:
 
 
     World(std::string jsonPath);
-    // World(std::string configFile);
 
     void clearScreen();
     void updateLights();
     void draw();
     void screenShot(char *filename);
     void addLightSource(glm::vec3 lightSource);
-    // void addCube(Cube c);
 };

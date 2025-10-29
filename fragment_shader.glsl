@@ -7,8 +7,6 @@ in vec3 Normal;
 #define MAX_LIGHTS 16
 uniform vec3 lightSources[MAX_LIGHTS];
 uniform int numLights;
-
-uniform bool isLamp;
 uniform vec3 cameraPos;
 uniform vec3 objectColor;
 uniform vec3 lightColor;

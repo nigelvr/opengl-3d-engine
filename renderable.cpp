@@ -126,7 +126,16 @@ void WireCube::draw(std::shared_ptr<Shader> shader) {
     glLineWidth(1.0f);
 }
 
+// ------------------------------------------------------------
+// WireCube::setupMesh()
+// ------------------------------------------------------------
+// Sets up VAOs, VBOs, and EBOs for drawing both the cube’s
+// filled faces and its wireframe edges.
+// ------------------------------------------------------------
 void WireCube::setupMesh() {
+    // --- 1. Define cube vertex positions ---
+    // Each vertex is a corner of the cube centered at origin.
+    // Using normalized coordinates (-0.5 to +0.5) for easy scaling later.
     float vertices[] = {
         -0.5f, -0.5f, -0.5f,  // 0
          0.5f, -0.5f, -0.5f,  // 1
@@ -138,6 +147,8 @@ void WireCube::setupMesh() {
         -0.5f,  0.5f,  0.5f   // 7
     };
 
+    // --- 2. Define triangle faces (for solid cube) ---
+    // Each face has 2 triangles, made from 6 indices.
     unsigned int faceIndices[] = {
         0, 1, 2, 2, 3, 0,   // back
         4, 7, 6, 6, 5, 4,   // front
@@ -147,42 +158,63 @@ void WireCube::setupMesh() {
         1, 5, 6, 6, 2, 1    // right
     };
 
+    // --- 3. Define line edges (for wireframe overlay) ---
     unsigned int edgeIndices[] = {
         0, 1, 1, 2, 2, 3, 3, 0,  // back
         4, 5, 5, 6, 6, 7, 7, 4,  // front
         0, 4, 1, 5, 2, 6, 3, 7   // connectors
     };
 
+    // --- 4. Count elements for drawing later ---
     numFaceIndices = sizeof(faceIndices) / sizeof(faceIndices[0]);
     numEdgeIndices = sizeof(edgeIndices) / sizeof(edgeIndices[0]);
 
-    // Shared vertex buffer
+    // --- 5. Create and fill a single shared VBO (positions) ---
+    // Both VAOs (faces and edges) will reference the same vertex buffer.
     glGenBuffers(1, &VBO);
     glBindBuffer(GL_ARRAY_BUFFER, VBO);
     glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
 
-    // --- VAO for faces ---
+    // ------------------------------------------------------------
+    // --- VAO #1 : Faces (solid triangles)
+    // ------------------------------------------------------------
     glGenVertexArrays(1, &VAO_faces);
     glGenBuffers(1, &EBO_faces);
 
     glBindVertexArray(VAO_faces);
+
+    // Bind shared vertex buffer (already filled)
     glBindBuffer(GL_ARRAY_BUFFER, VBO);
+
+    // Bind & fill element buffer for faces
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO_faces);
     glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(faceIndices), faceIndices, GL_STATIC_DRAW);
+
+    // Vertex attribute layout (location = 0 → vec3 position)
     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
     glEnableVertexAttribArray(0);
 
-    // --- VAO for edges ---
+    // ------------------------------------------------------------
+    // --- VAO #2 : Edges (lines)
+    // ------------------------------------------------------------
     glGenVertexArrays(1, &VAO_edges);
     glGenBuffers(1, &EBO_edges);
 
     glBindVertexArray(VAO_edges);
+
+    // Bind same vertex buffer again (shared data)
     glBindBuffer(GL_ARRAY_BUFFER, VBO);
+
+    // Bind & fill element buffer for edges
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO_edges);
     glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(edgeIndices), edgeIndices, GL_STATIC_DRAW);
+
+    // Vertex attribute layout (identical to faces)
     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
     glEnableVertexAttribArray(0);
 
+    // --- 6. Unbind for safety ---
     glBindVertexArray(0);
     glBindBuffer(GL_ARRAY_BUFFER, 0);
 }
+

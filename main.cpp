@@ -4,8 +4,6 @@
 
 #include <SDL2/SDL.h>
 
-// #include <SDL2/SDL_hints.h>
-
 #include <GL/glew.h>
 
 #include <GLFW/glfw3.h>
@@ -52,16 +50,7 @@ int main(int argc, char* argv[]) {
     glewExperimental = GL_TRUE;
     glewInit();
     glEnable(GL_DEPTH_TEST);
-//    glDisable(GL_CULL_FACE);
 
-
-
-    //VertexData vertexData(objpath);
-    // our world
-    //Cube cubes[] = {
-    //    Cube(glm::vec3( 0.0f,  0.0f, 0.0f), glm::vec3(1.0f, 0.5f, 0.31f), 1.0f, vertexData),
-    //};
-    //int numCubes = sizeof(cubes)/sizeof(cubes[0]);
     glm::vec3 lightSources[] = {
         glm::vec3(0.0f, -1.0f, 0.0f),
         glm::vec3(0.0f, 1.0f, 0.0f),
@@ -71,9 +60,6 @@ int main(int argc, char* argv[]) {
     for (auto l : lightSources) {
         world.addLightSource(l);
     }
-    // for (auto c : cubes) {
-    //    world.addCube(c);
-    //}
 
     // shader variables
     glm::mat4 view = world.camera->viewMatrix();
