@@ -4,7 +4,7 @@ CXXFLAGS := -g -I/usr/include/stb
 LDFLAGS  := -lSDL2 -lGL -lGLEW -lglfw -lstb
 
 # Sources and objects
-SRC      := camera.cpp input_handler.cpp main.cpp common.cpp shader.cpp vertex_data.cpp texture.cpp renderable.cpp world.cpp
+SRC      := camera.cpp input_handler.cpp main.cpp common.cpp shader.cpp renderable.cpp world.cpp
 OBJ      := $(SRC:.cpp=.o)
 TARGET   := opengl_lighting
 

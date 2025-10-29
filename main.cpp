@@ -20,9 +20,6 @@
 #include "camera.h"
 #include "input_handler.h"
 #include "shader.h"
-#include "vertex_data.h"
-#include "texture.h"
-// #include "objects.h"
 #include "renderable.h"
 #include "world.h"
 
