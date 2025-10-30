@@ -103,28 +103,24 @@ WireCube::~WireCube() {
     glDeleteBuffers(1, &EBO_edges);
 }
 
-void WireCube::draw(std::shared_ptr<Shader> shader) {
+void WireCube::draw(std::shared_ptr<Shader> shader)
+{
     shader->use();
     shader->installM4("model", model);
-
-    // --- Draw solid cube ---
     shader->installVec3("objectColor", color);
     glBindVertexArray(VAO_faces);
-    glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
     glDrawElements(GL_TRIANGLES, numFaceIndices, GL_UNSIGNED_INT, 0);
 
     // --- Draw bold edges ---
     shader->installVec3("objectColor", edgeColor);
-    glBindVertexArray(VAO_edges);
     glLineWidth(edgeThickness);
-    glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+    glBindVertexArray(VAO_edges);
     glDrawElements(GL_LINES, numEdgeIndices, GL_UNSIGNED_INT, 0);
 
     // reset state
     glBindVertexArray(0);
-    glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-    glLineWidth(1.0f);
 }
+
 
 // ------------------------------------------------------------
 // WireCube::setupMesh()
@@ -137,14 +133,42 @@ void WireCube::setupMesh() {
     // Each vertex is a corner of the cube centered at origin.
     // Using normalized coordinates (-0.5 to +0.5) for easy scaling later.
     float vertices[] = {
-        -0.5f, -0.5f, -0.5f,  // 0
-         0.5f, -0.5f, -0.5f,  // 1
-         0.5f,  0.5f, -0.5f,  // 2
-        -0.5f,  0.5f, -0.5f,  // 3
-        -0.5f, -0.5f,  0.5f,  // 4
-         0.5f, -0.5f,  0.5f,  // 5
-         0.5f,  0.5f,  0.5f,  // 6
-        -0.5f,  0.5f,  0.5f   // 7
+        // positions           // normals
+        // back face
+        -0.5f, -0.5f, -0.5f,   0.0f,  0.0f, -1.0f,
+         0.5f, -0.5f, -0.5f,   0.0f,  0.0f, -1.0f,
+         0.5f,  0.5f, -0.5f,   0.0f,  0.0f, -1.0f,
+        -0.5f,  0.5f, -0.5f,   0.0f,  0.0f, -1.0f,
+
+        // front face
+        -0.5f, -0.5f,  0.5f,   0.0f,  0.0f,  1.0f,
+         0.5f, -0.5f,  0.5f,   0.0f,  0.0f,  1.0f,
+         0.5f,  0.5f,  0.5f,   0.0f,  0.0f,  1.0f,
+        -0.5f,  0.5f,  0.5f,   0.0f,  0.0f,  1.0f,
+
+        // left face
+        -0.5f, -0.5f, -0.5f,  -1.0f,  0.0f,  0.0f,
+        -0.5f, -0.5f,  0.5f,  -1.0f,  0.0f,  0.0f,
+        -0.5f,  0.5f,  0.5f,  -1.0f,  0.0f,  0.0f,
+        -0.5f,  0.5f, -0.5f,  -1.0f,  0.0f,  0.0f,
+
+        // right face
+         0.5f, -0.5f, -0.5f,   1.0f,  0.0f,  0.0f,
+         0.5f, -0.5f,  0.5f,   1.0f,  0.0f,  0.0f,
+         0.5f,  0.5f,  0.5f,   1.0f,  0.0f,  0.0f,
+         0.5f,  0.5f, -0.5f,   1.0f,  0.0f,  0.0f,
+
+        // bottom face
+        -0.5f, -0.5f, -0.5f,   0.0f, -1.0f,  0.0f,
+         0.5f, -0.5f, -0.5f,   0.0f, -1.0f,  0.0f,
+         0.5f, -0.5f,  0.5f,   0.0f, -1.0f,  0.0f,
+        -0.5f, -0.5f,  0.5f,   0.0f, -1.0f,  0.0f,
+
+        // top face
+        -0.5f,  0.5f, -0.5f,   0.0f,  1.0f,  0.0f,
+         0.5f,  0.5f, -0.5f,   0.0f,  1.0f,  0.0f,
+         0.5f,  0.5f,  0.5f,   0.0f,  1.0f,  0.0f,
+        -0.5f,  0.5f,  0.5f,   0.0f,  1.0f,  0.0f
     };
 
     // --- 2. Define triangle faces (for solid cube) ---
@@ -190,9 +214,13 @@ void WireCube::setupMesh() {
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO_faces);
     glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(faceIndices), faceIndices, GL_STATIC_DRAW);
 
-    // Vertex attribute layout (location = 0 → vec3 position)
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
-    glEnableVertexAttribArray(0);
+    // Vertex attribute layout (location = 0,1)
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)0);
+    glEnableVertexAttribArray(0);  // position
+
+    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)(3 * sizeof(float)));
+    glEnableVertexAttribArray(1);  // normal
+
 
     // ------------------------------------------------------------
     // --- VAO #2 : Edges (lines)
@@ -210,7 +238,7 @@ void WireCube::setupMesh() {
     glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(edgeIndices), edgeIndices, GL_STATIC_DRAW);
 
     // Vertex attribute layout (identical to faces)
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)0);
     glEnableVertexAttribArray(0);
 
     // --- 6. Unbind for safety ---
