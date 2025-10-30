@@ -28,6 +28,7 @@
 int main(int argc, char* argv[]) {
     bool debug = false;
     bool screenshot = false;
+    bool fullscreen = false;
     std::string objpath = "./data/cube.data";
     for (int i = 0; i < argc; i++) {
         std::string arg = argv[i];
@@ -38,13 +39,18 @@ int main(int argc, char* argv[]) {
         } else if (arg == "--data") {
             assert(i+1 < argc);
             objpath = argv[i+1];
+        } else if (arg == "-f" || arg == "--fullscreen") {
+            fullscreen = true;
         }
     }
 
     SDL_Init(SDL_INIT_VIDEO);
+    uint32_t window_flag = SDL_WINDOW_OPENGL | SDL_WINDOW_SHOWN;
+    if (fullscreen) {
+        window_flag |= SDL_WINDOW_FULLSCREEN_DESKTOP;
+    }
     SDL_Window* window = SDL_CreateWindow("OpenGL Triangle",
-        SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, SCR_WIDTH, SCR_HEIGHT,
-        SDL_WINDOW_OPENGL | SDL_WINDOW_SHOWN);
+        SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, SCR_WIDTH, SCR_HEIGHT, window_flag);
 
     SDL_GLContext context = SDL_GL_CreateContext(window);
     glewExperimental = GL_TRUE;

@@ -22,7 +22,6 @@ public:
            int cScrWidth, int cScrHeight);
     Camera(std::string jsonPath);
 
-    glm::vec3 direction();
     glm::mat4 viewMatrix();
     glm::mat4 projectionMatrix();
 
@@ -31,8 +30,8 @@ public:
     void moveBackward();
     void moveLeft();
     void moveRight();
-    void pitchUp(int motion_y);
-    void pitchDown(int motion_y);
-    void yawLeft(int motion_x);
-    void yawRight(int motion_x);
+    void processMouseMovement(float xoffset, float yoffset, bool constrainPitch);
+private:
+    void updateFront();
+    
 };

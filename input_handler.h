@@ -14,4 +14,9 @@ public:
     void processInput();
     void handleMouseEvent(SDL_Event event);
     void handleKeyboardEvent(SDL_Event event);
+    void handleMouseMotion(const SDL_MouseMotionEvent& motion);
+private:
+    bool firstMouseMovement;
+    int lastX;
+    int lastY;
 };

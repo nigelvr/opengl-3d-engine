@@ -13,7 +13,9 @@ Camera::Camera(glm::vec3 cPos, glm::vec3 cFront, glm::vec3 cUp,
     : cameraPos(cPos), cameraFront(cFront), cameraUp(cUp),
       fov(cFov), ar(cAr), yaw(cYaw), pitch(cPitch),
       camSpeed(2.0f), screenWidth(cScrWidth), screenHeight(cScrHeight)
-{}
+{
+    updateFront();
+}
 
 Camera::Camera(std::string jsonPath) {
     json config;
@@ -36,19 +38,8 @@ Camera::Camera(std::string jsonPath) {
     fov = config["fov"].get<float>();
 }
 
-glm::vec3 Camera::direction() {
-    return cameraPos + cameraFront;
-}
 
 glm::mat4 Camera::viewMatrix() {
-    /* float yawRad = glm::radians(static_cast<float>(yaw));
-    float pitchRad = glm::radians(static_cast<float>(pitch));
-
-    cameraFront.x = cos(yawRad) * cos(pitchRad);
-    cameraFront.y = sin(pitchRad);
-    cameraFront.z = sin(yawRad) * cos(pitchRad); */
-    cameraFront = -cameraPos;
-
     return glm::lookAt(cameraPos, cameraPos + cameraFront, cameraUp);
 }
 
@@ -68,26 +59,39 @@ void Camera::moveBackward() {
     cameraPos -= static_cast<float>(camSpeed) * cameraFront;
 }
 
-void Camera::moveLeft() {
-    cameraPos += glm::normalize(glm::cross(cameraUp, cameraFront)) * static_cast<float>(camSpeed) * 2.5f;
+void Camera::moveLeft()
+{
+    glm::vec3 right = glm::normalize(glm::cross(cameraFront, cameraUp));
+    cameraPos -= right * camSpeed;
+}
+void Camera::moveRight()
+{
+    glm::vec3 right = glm::normalize(glm::cross(cameraFront, cameraUp));
+    cameraPos += right * camSpeed;
 }
 
-void Camera::moveRight() {
-    cameraPos -= glm::normalize(glm::cross(cameraUp, cameraFront)) * static_cast<float>(camSpeed) * 2.5f;
+void Camera::processMouseMovement(float xoffset, float yoffset, bool constrainPitch)
+{
+    constexpr float sensitivity = 0.08f;
+    yaw   += xoffset * sensitivity;
+    pitch += yoffset * sensitivity;
+
+    if (constrainPitch) {
+        if (pitch > 89.0) pitch = 89.0;
+        if (pitch < -89.0) pitch = -89.0;
+    }
+
+    updateFront();
 }
 
-void Camera::pitchUp(int motion_y) {
-    pitch = ((static_cast<float>(screenHeight) / 2.0f - motion_y) / (static_cast<float>(screenHeight) / 2.0f)) * 180.0f;
-}
+void Camera::updateFront() {
+    glm::vec3 front;
+    double yawRad = glm::radians(yaw);
+    double pitchRad = glm::radians(pitch);
 
-void Camera::pitchDown(int motion_y) {
-    pitch = -(motion_y - static_cast<float>(screenHeight) / 2.0f) / (static_cast<float>(screenHeight) / 2.0f) * 180.0f;
-}
+    front.x = static_cast<float>(cos(yawRad) * cos(pitchRad));
+    front.y = static_cast<float>(sin(pitchRad));
+    front.z = static_cast<float>(sin(yawRad) * cos(pitchRad));
 
-void Camera::yawLeft(int motion_x) {
-    yaw = -90.0f + -180.0f * ((static_cast<float>(screenWidth) / 2.0f - motion_x) / (static_cast<float>(screenWidth) / 2.0f));
-}
-
-void Camera::yawRight(int motion_x) {
-    yaw = -90.0f - -180.0f * ((motion_x - static_cast<float>(screenWidth) / 2.0f) / (static_cast<float>(screenWidth) / 2.0f));
+    cameraFront = glm::normalize(front);
 }
