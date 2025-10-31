@@ -94,7 +94,15 @@ int main(int argc, char* argv[]) {
         int mousex, mousey;
         SDL_GetMouseState(&mousex, &mousey);
         if (debug) {
-            printf("cam = %f %f %f ; yaw = %f ; mouse = %d %d\n", world.camera->cameraPos.x, world.camera->cameraPos.y, world.camera->cameraPos.z, world.camera->yaw, mousex, mousey);
+            printf("cam = %f %f %f ; yaw = %f ; pitch = %f ; mouse = %d %d\n",
+                world.camera->cameraPos.x,
+                world.camera->cameraPos.y,
+                world.camera->cameraPos.z,
+                world.camera->yaw,
+                world.camera->pitch,
+                mousex,
+                mousey
+            );
         }
         curTick = SDL_GetTicks();
         // set cam speed

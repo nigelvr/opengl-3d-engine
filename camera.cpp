@@ -64,6 +64,7 @@ void Camera::moveLeft()
     glm::vec3 right = glm::normalize(glm::cross(cameraFront, cameraUp));
     cameraPos -= right * camSpeed;
 }
+
 void Camera::moveRight()
 {
     glm::vec3 right = glm::normalize(glm::cross(cameraFront, cameraUp));

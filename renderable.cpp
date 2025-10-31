@@ -133,53 +133,53 @@ void WireCube::setupMesh() {
     // Each vertex is a corner of the cube centered at origin.
     // Using normalized coordinates (-0.5 to +0.5) for easy scaling later.
     float vertices[] = {
-        // positions           // normals
-        // back face
-        -0.5f, -0.5f, -0.5f,   0.0f,  0.0f, -1.0f,
-         0.5f, -0.5f, -0.5f,   0.0f,  0.0f, -1.0f,
-         0.5f,  0.5f, -0.5f,   0.0f,  0.0f, -1.0f,
-        -0.5f,  0.5f, -0.5f,   0.0f,  0.0f, -1.0f,
+        // positions           // normals           // UVs
+        // Back face (-Z)
+        -0.5f, -0.5f, -0.5f,   0.0f,  0.0f, -1.0f,   0.0f, 0.0f,  // bottom-left
+        0.5f, -0.5f, -0.5f,   0.0f,  0.0f, -1.0f,   1.0f, 0.0f,  // bottom-right
+        0.5f,  0.5f, -0.5f,   0.0f,  0.0f, -1.0f,   1.0f, 1.0f,  // top-right
+        -0.5f,  0.5f, -0.5f,   0.0f,  0.0f, -1.0f,   0.0f, 1.0f,  // top-left
 
-        // front face
-        -0.5f, -0.5f,  0.5f,   0.0f,  0.0f,  1.0f,
-         0.5f, -0.5f,  0.5f,   0.0f,  0.0f,  1.0f,
-         0.5f,  0.5f,  0.5f,   0.0f,  0.0f,  1.0f,
-        -0.5f,  0.5f,  0.5f,   0.0f,  0.0f,  1.0f,
+        // Front face (+Z)
+        -0.5f, -0.5f,  0.5f,   0.0f,  0.0f,  1.0f,   0.0f, 0.0f,
+        0.5f, -0.5f,  0.5f,   0.0f,  0.0f,  1.0f,   1.0f, 0.0f,
+        0.5f,  0.5f,  0.5f,   0.0f,  0.0f,  1.0f,   1.0f, 1.0f,
+        -0.5f,  0.5f,  0.5f,   0.0f,  0.0f,  1.0f,   0.0f, 1.0f,
 
-        // left face
-        -0.5f, -0.5f, -0.5f,  -1.0f,  0.0f,  0.0f,
-        -0.5f, -0.5f,  0.5f,  -1.0f,  0.0f,  0.0f,
-        -0.5f,  0.5f,  0.5f,  -1.0f,  0.0f,  0.0f,
-        -0.5f,  0.5f, -0.5f,  -1.0f,  0.0f,  0.0f,
+        // Left face (-X)
+        -0.5f, -0.5f, -0.5f,  -1.0f,  0.0f,  0.0f,   0.0f, 0.0f,
+        -0.5f, -0.5f,  0.5f,  -1.0f,  0.0f,  0.0f,   1.0f, 0.0f,
+        -0.5f,  0.5f,  0.5f,  -1.0f,  0.0f,  0.0f,   1.0f, 1.0f,
+        -0.5f,  0.5f, -0.5f,  -1.0f,  0.0f,  0.0f,   0.0f, 1.0f,
 
-        // right face
-         0.5f, -0.5f, -0.5f,   1.0f,  0.0f,  0.0f,
-         0.5f, -0.5f,  0.5f,   1.0f,  0.0f,  0.0f,
-         0.5f,  0.5f,  0.5f,   1.0f,  0.0f,  0.0f,
-         0.5f,  0.5f, -0.5f,   1.0f,  0.0f,  0.0f,
+        // Right face (+X)
+        0.5f, -0.5f, -0.5f,   1.0f,  0.0f,  0.0f,   0.0f, 0.0f,
+        0.5f, -0.5f,  0.5f,   1.0f,  0.0f,  0.0f,   1.0f, 0.0f,
+        0.5f,  0.5f,  0.5f,   1.0f,  0.0f,  0.0f,   1.0f, 1.0f,
+        0.5f,  0.5f, -0.5f,   1.0f,  0.0f,  0.0f,   0.0f, 1.0f,
 
-        // bottom face
-        -0.5f, -0.5f, -0.5f,   0.0f, -1.0f,  0.0f,
-         0.5f, -0.5f, -0.5f,   0.0f, -1.0f,  0.0f,
-         0.5f, -0.5f,  0.5f,   0.0f, -1.0f,  0.0f,
-        -0.5f, -0.5f,  0.5f,   0.0f, -1.0f,  0.0f,
+        // Bottom face (-Y)
+        -0.5f, -0.5f, -0.5f,   0.0f, -1.0f,  0.0f,   0.0f, 0.0f,
+        0.5f, -0.5f, -0.5f,   0.0f, -1.0f,  0.0f,   1.0f, 0.0f,
+        0.5f, -0.5f,  0.5f,   0.0f, -1.0f,  0.0f,   1.0f, 1.0f,
+        -0.5f, -0.5f,  0.5f,   0.0f, -1.0f,  0.0f,   0.0f, 1.0f,
 
-        // top face
-        -0.5f,  0.5f, -0.5f,   0.0f,  1.0f,  0.0f,
-         0.5f,  0.5f, -0.5f,   0.0f,  1.0f,  0.0f,
-         0.5f,  0.5f,  0.5f,   0.0f,  1.0f,  0.0f,
-        -0.5f,  0.5f,  0.5f,   0.0f,  1.0f,  0.0f
+        // Top face (+Y)
+        -0.5f,  0.5f, -0.5f,   0.0f,  1.0f,  0.0f,   0.0f, 0.0f,
+        0.5f,  0.5f, -0.5f,   0.0f,  1.0f,  0.0f,   1.0f, 0.0f,
+        0.5f,  0.5f,  0.5f,   0.0f,  1.0f,  0.0f,   1.0f, 1.0f,
+        -0.5f,  0.5f,  0.5f,   0.0f,  1.0f,  0.0f,   0.0f, 1.0f
     };
 
     // --- 2. Define triangle faces (for solid cube) ---
     // Each face has 2 triangles, made from 6 indices.
     unsigned int faceIndices[] = {
-        0, 1, 2, 2, 3, 0,   // back
-        4, 7, 6, 6, 5, 4,   // front
-        0, 4, 5, 5, 1, 0,   // bottom
-        3, 2, 6, 6, 7, 3,   // top
-        0, 3, 7, 7, 4, 0,   // left
-        1, 5, 6, 6, 2, 1    // right
+        0, 1, 2, 2, 3, 0,
+        4, 5, 6, 6, 7, 4,
+        12, 13, 14, 14, 15, 12,
+        16, 17, 18, 18, 19, 16,
+        8, 9, 10, 10, 11, 8,
+        20, 21, 22, 22, 23, 20,
     };
 
     // --- 3. Define line edges (for wireframe overlay) ---
@@ -215,10 +215,10 @@ void WireCube::setupMesh() {
     glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(faceIndices), faceIndices, GL_STATIC_DRAW);
 
     // Vertex attribute layout (location = 0,1)
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)0);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)0);
     glEnableVertexAttribArray(0);  // position
 
-    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)(3 * sizeof(float)));
+    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(3 * sizeof(float)));
     glEnableVertexAttribArray(1);  // normal
 
 
@@ -238,7 +238,7 @@ void WireCube::setupMesh() {
     glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(edgeIndices), edgeIndices, GL_STATIC_DRAW);
 
     // Vertex attribute layout (identical to faces)
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)0);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)0);
     glEnableVertexAttribArray(0);
 
     // --- 6. Unbind for safety ---
