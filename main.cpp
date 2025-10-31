@@ -12,8 +12,6 @@
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
 
-#include <stb_image.h>
-
 #include "common.h"
 #include "camera.h"
 #include "input_handler.h"
@@ -49,7 +47,7 @@ int main(int argc, char* argv[]) {
     if (fullscreen) {
         window_flag |= SDL_WINDOW_FULLSCREEN_DESKTOP;
     }
-    SDL_Window* window = SDL_CreateWindow("OpenGL Triangle",
+    SDL_Window* window = SDL_CreateWindow("OpenGL Engine",
         SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, SCR_WIDTH, SCR_HEIGHT, window_flag);
 
     SDL_GLContext context = SDL_GL_CreateContext(window);
