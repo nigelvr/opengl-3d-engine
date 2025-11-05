@@ -22,12 +22,12 @@ public:
     virtual ~Renderable() = default;
 };
 
-class CubeX : public Renderable {
+class SimpleCube : public Renderable {
 public:
-    CubeX(glm::vec3 position = glm::vec3(0.0f),
+    SimpleCube(glm::vec3 position = glm::vec3(0.0f),
           glm::vec3 color    = glm::vec3(1.0f));
 
-    ~CubeX() override;
+    ~SimpleCube() override;
 
 private:
     GLuint VBO = 0, EBO = 0;
