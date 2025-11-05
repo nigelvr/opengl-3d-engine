@@ -88,6 +88,7 @@ int main(int argc, char* argv[]) {
     int curTick, lastTick=0, deltaTick;
     double deltaTime = 0.1f;
 
+    SDL_WarpMouseInWindow(window, 257, 562);
     while (world.ih->running) {
         int mousex, mousey;
         SDL_GetMouseState(&mousex, &mousey);

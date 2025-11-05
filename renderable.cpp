@@ -8,11 +8,12 @@
 
 #include "shader.h"
 
-std::pair<std::vector<float>, std::vector<int>> extractVerticies(std::string filename) {
+std::tuple<std::vector<float>, std::vector<int>> extractVerticies(std::string filename) {
     std::ifstream file(filename);
     
     std::vector<float> vx_coords;
     std::vector<int> vx_idxs;
+    std::vector<int> uv_idxs;
     std::string line;
 
     while (std::getline(file, line)) {
@@ -36,7 +37,7 @@ std::pair<std::vector<float>, std::vector<int>> extractVerticies(std::string fil
             }
         }
     }
-    return std::make_pair(vx_coords, vx_idxs);
+    return std::make_tuple(vx_coords, vx_idxs);
 }
 
 void Renderable::draw(std::shared_ptr<Shader> shader)
@@ -77,9 +78,8 @@ void SimpleCube::setupMesh()
     };
 
     auto meshdata = extractVerticies("assets/models/cube.obj");
-    auto vxs = meshdata.first;
-    auto idxs = meshdata.second;
-
+    auto vxs = std::get<0>(meshdata);
+    auto idxs = std::get<1>(meshdata); 
     for (int i = 0; i < vxs.size(); i++) {
         if (i % 3 == 0) {
             printf("\n");
