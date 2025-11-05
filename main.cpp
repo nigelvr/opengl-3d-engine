@@ -49,7 +49,8 @@ int main(int argc, char* argv[]) {
     }
     SDL_Window* window = SDL_CreateWindow("OpenGL Engine",
         SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, SCR_WIDTH, SCR_HEIGHT, window_flag);
-
+    //SDL_ShowCursor(SDL_DISABLE);
+    SDL_SetRelativeMouseMode(SDL_TRUE);   // Line 104
     SDL_GLContext context = SDL_GL_CreateContext(window);
     glewExperimental = GL_TRUE;
     glewInit();
