@@ -8,6 +8,36 @@
 
 #include "shader.h"
 
+std::pair<std::vector<float>, std::vector<int>> extractVerticies(std::string filename) {
+    std::ifstream file(filename);
+    
+    std::vector<float> vx_coords;
+    std::vector<int> vx_idxs;
+    std::string line;
+
+    while (std::getline(file, line)) {
+        std::istringstream linestream(line);
+        std::string type;
+        linestream >> type;
+
+        if (type == "v") {
+            glm::vec3 v;
+            linestream >> v.x >> v.y >> v.z;
+            vx_coords.push_back(v.x);
+            vx_coords.push_back(v.y);
+            vx_coords.push_back(v.z);
+        } else if (type == "f") {
+            std::string part;
+            for (int i = 0; i < 3; i++) {
+                linestream >> part;
+                int v,t,n;
+                sscanf(part.c_str(), "%u/%u/%u", &v, &t, &n);
+                vx_idxs.push_back(v-1);
+            }
+        }
+    }
+    return std::make_pair(vx_coords, vx_idxs);
+}
 
 void Renderable::draw(std::shared_ptr<Shader> shader)
 {
@@ -37,18 +67,6 @@ SimpleCube::~SimpleCube()
 
 void SimpleCube::setupMesh()
 {
-    // Basic cube (positions only)
-    float vertices[] = {
-        -0.5f, -0.5f, -0.5f,
-         0.5f, -0.5f, -0.5f,
-         0.5f,  0.5f, -0.5f,
-        -0.5f,  0.5f, -0.5f,
-        -0.5f, -0.5f,  0.5f,
-         0.5f, -0.5f,  0.5f,
-         0.5f,  0.5f,  0.5f,
-        -0.5f,  0.5f,  0.5f
-    };
-
     unsigned int indices[] = {
         0, 1, 2, 2, 3, 0,   // back
         4, 5, 6, 6, 7, 4,   // front
@@ -57,6 +75,28 @@ void SimpleCube::setupMesh()
         0, 3, 7, 7, 4, 0,   // left
         1, 2, 6, 6, 5, 1    // right
     };
+
+    auto meshdata = extractVerticies("assets/models/cube.obj");
+    auto vxs = meshdata.first;
+    auto idxs = meshdata.second;
+
+    for (int i = 0; i < vxs.size(); i++) {
+        if (i % 3 == 0) {
+            printf("\n");
+        }
+        printf("%f ", vxs[i]);
+    }
+    printf("\n");
+
+    for (int i = 0; i < idxs.size(); i++) {
+        if (i % 6 == 0) {
+            printf("\n");
+        }
+        printf("%d ", idxs[i]);
+    }
+    printf("\n");
+
+
 
     numIndices = sizeof(indices) / sizeof(indices[0]);
 
@@ -67,7 +107,7 @@ void SimpleCube::setupMesh()
     glBindVertexArray(VAO);
 
     glBindBuffer(GL_ARRAY_BUFFER, VBO);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
+    glBufferData(GL_ARRAY_BUFFER, vxs.size()*sizeof(float), vxs.data(), GL_STATIC_DRAW);
 
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
     glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
