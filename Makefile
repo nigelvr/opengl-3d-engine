@@ -1,6 +1,6 @@
 # Compiler and flags
 CXX      := g++
-CXXFLAGS := -g -I/usr/include/stb
+CXXFLAGS := -g -I/usr/include/stb -std=c++20
 LDFLAGS  := -lSDL2 -lGL -lGLEW -lglfw -lstb
 
 # Sources and objects

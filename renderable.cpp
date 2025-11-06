@@ -1,4 +1,6 @@
 #include <iostream>
+#include <unordered_set>
+#include <set>
 
 #include "renderable.h"
 
@@ -8,9 +10,35 @@
 
 #include "shader.h"
 
-std::pair<std::vector<Vertex>, std::vector<unsigned int>> parseObjFile(std::string filename) {
+std::vector<unsigned int> generateEdgeIndices(const std::vector<unsigned int>& triangleIndices) {
+    std::vector<unsigned int> edgeIndices;
+    std::set<std::pair<unsigned int, unsigned int>> uniqueEdges;
+
+    for (size_t i = 0; i < triangleIndices.size(); i += 3) {
+        unsigned int i0 = triangleIndices[i];
+        unsigned int i1 = triangleIndices[i + 1];
+        unsigned int i2 = triangleIndices[i + 2];
+
+        // Ensure consistent ordering: smaller index first
+        auto addEdge = [&uniqueEdges, &edgeIndices](unsigned int a, unsigned int b) {
+            if (a > b) std::swap(a, b);
+            if (uniqueEdges.insert({a, b}).second) {
+                edgeIndices.push_back(a);
+                edgeIndices.push_back(b);
+            }
+        };
+
+        addEdge(i0, i1);
+        addEdge(i1, i2);
+        addEdge(i2, i0);
+    }
+
+    return edgeIndices;
+}
+
+std::tuple<std::vector<Vertex>, std::vector<unsigned int>, std::vector<unsigned int>> parseObjFile(std::string filename) {
     std::vector<glm::vec3> vx_coords;
-    std::vector<int> vx_idxs;
+    std::vector<unsigned int> vx_idxs;
     std::vector<glm::vec3> normal_coords;
     std::vector<int> normal_idxs;
     std::vector<glm::vec2> uv_coords;
@@ -51,51 +79,55 @@ std::pair<std::vector<Vertex>, std::vector<unsigned int>> parseObjFile(std::stri
     glm::vec3 v;
     glm::vec2 u;
     glm::vec3 n;
+    std::map<std::tuple<unsigned int, unsigned int, unsigned int>, unsigned int> vertexMap;
     for (int i = 0; i < vx_idxs.size(); i++) {
-        v = vx_coords[vx_idxs[i]-1];
-        n = normal_coords[normal_idxs[i]-1];
-        u = uv_coords[uv_idxs[i]-1];
-        vxs.push_back(Vertex(v,n,u));
-        idxs.push_back(i);
+        auto key = std::make_tuple(vx_idxs[i], normal_idxs[i], uv_idxs[i]);
+        if (vertexMap.count(key) == 0) {
+            vertexMap[key] = vxs.size();
+            v = vx_coords[vx_idxs[i]-1];
+            n = normal_coords[normal_idxs[i]-1];
+            u = uv_coords[uv_idxs[i]-1];
+            vxs.push_back(Vertex(v,n,u));
+        }
+        idxs.push_back(vertexMap[key]);
     }
-    return std::make_pair(vxs, idxs);
+
+    std::vector<unsigned int> edgeIndices = generateEdgeIndices(vx_idxs);
+
+    return std::make_tuple(vxs, idxs, edgeIndices);
 }
 
-void Renderable::draw(std::shared_ptr<Shader> shader)
+void Renderable::draw(std::shared_ptr<Shader> shader, bool wireFrame)
 {
     shader->installM4("model", model);
     shader->installVec3("objectColor", color);
-
     glBindVertexArray(VAO);
-    glDrawElements(GL_TRIANGLES, numIndices, GL_UNSIGNED_INT, 0);
+    glDrawElements(GL_TRIANGLES, numVertexIndices, GL_UNSIGNED_INT, 0);
+
+    // --- Draw bold edges ---
+    shader->installVec3("objectColor", glm::vec3(0.0f, 0.0f, 0.0f));
+    glLineWidth(10.0);
+    glBindVertexArray(VAO_edges);
+    glDrawElements(GL_LINES, numEdgeIndices, GL_UNSIGNED_INT, 0);
+
+    // reset state
     glBindVertexArray(0);
 }
 
-
-SimpleCube::SimpleCube(glm::vec3 position, glm::vec3 color, bool wireFrame)
-{
+Mesh::Mesh(std::string objfile, glm::vec3 position, glm::vec3 color) {
     this->color = color;
     this->model = glm::translate(glm::mat4(1.0f), position);
-    this->wireFrame = wireFrame;
 
-    setupMesh();
-}
+    auto objdata = parseObjFile(objfile);
+    std::vector<Vertex> vxs = std::get<0>(objdata);
+    std::vector<unsigned int> idxs = std::get<1>(objdata);
+    std::vector<unsigned int> edgeIdxs = std::get<2>(objdata);
+    numVertexIndices = idxs.size();
+    numEdgeIndices = edgeIdxs.size();
 
-SimpleCube::~SimpleCube()
-{
-    glDeleteVertexArrays(1, &VAO);
-    glDeleteBuffers(1, &VBO);
-    glDeleteBuffers(1, &EBO);
-}
+    printf("numEdgeIndices = %d\n", numEdgeIndices);
 
-void SimpleCube::setupMesh()
-{
-    auto objdata = parseObjFile("assets/models/cube.obj");
-    std::vector<Vertex> vxs = objdata.first;
-    std::vector<unsigned int> idxs = objdata.second;
-
-    printf("Vertices: %zu, Indices: %zu\n", vxs.size(), idxs.size());
-
+    // Set up memory for the object
     glGenVertexArrays(1, &VAO);
     glGenBuffers(1, &VBO);
     glGenBuffers(1, &EBO);
@@ -120,154 +152,7 @@ void SimpleCube::setupMesh()
     glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)offsetof(Vertex, uv));
     glEnableVertexAttribArray(2);
 
-    glBindVertexArray(0);
-
-    numIndices = idxs.size();
-
-}
-
-WireCube::WireCube(glm::vec3 position,
-                   glm::vec3 color,
-                   glm::vec3 edgeColor,
-                   float edgeThickness)
-    : color(color),
-      edgeColor(edgeColor),
-      edgeThickness(edgeThickness)
-{
-    model = glm::translate(glm::mat4(1.0f), position);
-    setupMesh();
-}
-
-WireCube::~WireCube() {
-    glDeleteVertexArrays(1, &VAO_faces);
-    glDeleteVertexArrays(1, &VAO_edges);
-    glDeleteBuffers(1, &VBO);
-    glDeleteBuffers(1, &EBO_faces);
-    glDeleteBuffers(1, &EBO_edges);
-}
-
-void WireCube::draw(std::shared_ptr<Shader> shader)
-{
-    shader->use();
-    shader->installM4("model", model);
-    shader->installVec3("objectColor", color);
-    glBindVertexArray(VAO_faces);
-    glDrawElements(GL_TRIANGLES, numFaceIndices, GL_UNSIGNED_INT, 0);
-
-    // --- Draw bold edges ---
-    shader->installVec3("objectColor", edgeColor);
-    glLineWidth(edgeThickness);
-    glBindVertexArray(VAO_edges);
-    glDrawElements(GL_LINES, numEdgeIndices, GL_UNSIGNED_INT, 0);
-
-    // reset state
-    glBindVertexArray(0);
-}
-
-
-// ------------------------------------------------------------
-// WireCube::setupMesh()
-// ------------------------------------------------------------
-// Sets up VAOs, VBOs, and EBOs for drawing both the cube’s
-// filled faces and its wireframe edges.
-// ------------------------------------------------------------
-void WireCube::setupMesh() {
-    // --- 1. Define cube vertex positions ---
-    // Each vertex is a corner of the cube centered at origin.
-    // Using normalized coordinates (-0.5 to +0.5) for easy scaling later.
-    float vertices[] = {
-        // positions           // normals           // UVs
-        // Back face (-Z)
-        -0.5f, -0.5f, -0.5f,   0.0f,  0.0f, -1.0f,   0.0f, 0.0f,  // bottom-left
-        0.5f, -0.5f, -0.5f,   0.0f,  0.0f, -1.0f,   1.0f, 0.0f,  // bottom-right
-        0.5f,  0.5f, -0.5f,   0.0f,  0.0f, -1.0f,   1.0f, 1.0f,  // top-right
-        -0.5f,  0.5f, -0.5f,   0.0f,  0.0f, -1.0f,   0.0f, 1.0f,  // top-left
-
-        // Front face (+Z)
-        -0.5f, -0.5f,  0.5f,   0.0f,  0.0f,  1.0f,   0.0f, 0.0f,
-        0.5f, -0.5f,  0.5f,   0.0f,  0.0f,  1.0f,   1.0f, 0.0f,
-        0.5f,  0.5f,  0.5f,   0.0f,  0.0f,  1.0f,   1.0f, 1.0f,
-        -0.5f,  0.5f,  0.5f,   0.0f,  0.0f,  1.0f,   0.0f, 1.0f,
-
-        // Left face (-X)
-        -0.5f, -0.5f, -0.5f,  -1.0f,  0.0f,  0.0f,   0.0f, 0.0f,
-        -0.5f, -0.5f,  0.5f,  -1.0f,  0.0f,  0.0f,   1.0f, 0.0f,
-        -0.5f,  0.5f,  0.5f,  -1.0f,  0.0f,  0.0f,   1.0f, 1.0f,
-        -0.5f,  0.5f, -0.5f,  -1.0f,  0.0f,  0.0f,   0.0f, 1.0f,
-
-        // Right face (+X)
-        0.5f, -0.5f, -0.5f,   1.0f,  0.0f,  0.0f,   0.0f, 0.0f,
-        0.5f, -0.5f,  0.5f,   1.0f,  0.0f,  0.0f,   1.0f, 0.0f,
-        0.5f,  0.5f,  0.5f,   1.0f,  0.0f,  0.0f,   1.0f, 1.0f,
-        0.5f,  0.5f, -0.5f,   1.0f,  0.0f,  0.0f,   0.0f, 1.0f,
-
-        // Bottom face (-Y)
-        -0.5f, -0.5f, -0.5f,   0.0f, -1.0f,  0.0f,   0.0f, 0.0f,
-        0.5f, -0.5f, -0.5f,   0.0f, -1.0f,  0.0f,   1.0f, 0.0f,
-        0.5f, -0.5f,  0.5f,   0.0f, -1.0f,  0.0f,   1.0f, 1.0f,
-        -0.5f, -0.5f,  0.5f,   0.0f, -1.0f,  0.0f,   0.0f, 1.0f,
-
-        // Top face (+Y)
-        -0.5f,  0.5f, -0.5f,   0.0f,  1.0f,  0.0f,   0.0f, 0.0f,
-        0.5f,  0.5f, -0.5f,   0.0f,  1.0f,  0.0f,   1.0f, 0.0f,
-        0.5f,  0.5f,  0.5f,   0.0f,  1.0f,  0.0f,   1.0f, 1.0f,
-        -0.5f,  0.5f,  0.5f,   0.0f,  1.0f,  0.0f,   0.0f, 1.0f
-    };
-
-    // --- 2. Define triangle faces (for solid cube) ---
-    // Each face has 2 triangles, made from 6 indices.
-    unsigned int faceIndices[] = {
-        0, 1, 2, 2, 3, 0,
-        4, 5, 6, 6, 7, 4,
-        12, 13, 14, 14, 15, 12,
-        16, 17, 18, 18, 19, 16,
-        8, 9, 10, 10, 11, 8,
-        20, 21, 22, 22, 23, 20,
-    };
-
-    // --- 3. Define line edges (for wireframe overlay) ---
-    unsigned int edgeIndices[] = {
-        0, 1, 1, 2, 2, 3, 3, 0,  // back
-        4, 5, 5, 6, 6, 7, 7, 4,  // front
-        0, 4, 1, 5, 2, 6, 3, 7   // connectors
-    };
-
-    // --- 4. Count elements for drawing later ---
-    numFaceIndices = sizeof(faceIndices) / sizeof(faceIndices[0]);
-    numEdgeIndices = sizeof(edgeIndices) / sizeof(edgeIndices[0]);
-
-    // --- 5. Create and fill a single shared VBO (positions) ---
-    // Both VAOs (faces and edges) will reference the same vertex buffer.
-    glGenBuffers(1, &VBO);
-    glBindBuffer(GL_ARRAY_BUFFER, VBO);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
-
-    // ------------------------------------------------------------
-    // --- VAO #1 : Faces (solid triangles)
-    // ------------------------------------------------------------
-    glGenVertexArrays(1, &VAO_faces);
-    glGenBuffers(1, &EBO_faces);
-
-    glBindVertexArray(VAO_faces);
-
-    // Bind shared vertex buffer (already filled)
-    glBindBuffer(GL_ARRAY_BUFFER, VBO);
-
-    // Bind & fill element buffer for faces
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO_faces);
-    glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(faceIndices), faceIndices, GL_STATIC_DRAW);
-
-    // Vertex attribute layout (location = 0,1)
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)0);
-    glEnableVertexAttribArray(0);  // position
-
-    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(3 * sizeof(float)));
-    glEnableVertexAttribArray(1);  // normal
-
-
-    // ------------------------------------------------------------
-    // --- VAO #2 : Edges (lines)
-    // ------------------------------------------------------------
+    // Set up memory for edges
     glGenVertexArrays(1, &VAO_edges);
     glGenBuffers(1, &EBO_edges);
 
@@ -278,7 +163,7 @@ void WireCube::setupMesh() {
 
     // Bind & fill element buffer for edges
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO_edges);
-    glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(edgeIndices), edgeIndices, GL_STATIC_DRAW);
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, numEdgeIndices*sizeof(unsigned int), edgeIdxs.data(), GL_STATIC_DRAW);
 
     // Vertex attribute layout (identical to faces)
     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)0);
@@ -289,3 +174,11 @@ void WireCube::setupMesh() {
     glBindBuffer(GL_ARRAY_BUFFER, 0);
 }
 
+Mesh::~Mesh()
+{
+    glDeleteVertexArrays(1, &VAO);
+    glDeleteBuffers(1, &VBO);
+    glDeleteBuffers(1, &EBO);
+    glDeleteBuffers(1, &VAO_edges);
+    glDeleteBuffers(1, &EBO_edges);
+}

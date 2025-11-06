@@ -26,45 +26,17 @@ class Renderable {
 public:
     glm::mat4 model;
     glm::vec3 color;
-    GLuint    VAO = 0;
-    GLsizei   numIndices = 0;
+    unsigned int VAO, VBO, EBO;
+    unsigned int VAO_edges, EBO_edges; // for wireframe
+    unsigned int numVertexIndices = 0;
+    unsigned int numEdgeIndices = 0;
 
-    virtual void draw(std::shared_ptr<Shader> shader);
+    virtual void draw(std::shared_ptr<Shader> shader, bool wireFrame);
     virtual ~Renderable() = default;
 };
 
-class SimpleCube : public Renderable {
+class Mesh : public Renderable {
 public:
-    bool wireFrame;
-    SimpleCube(glm::vec3 position = glm::vec3(0.0f), glm::vec3 color = glm::vec3(1.0f), bool wireFrame=false);
-
-    ~SimpleCube() override;
-
-private:
-    GLuint VBO = 0, EBO = 0;
-
-    void setupMesh();
-};
-
-class WireCube : public Renderable {
-public:
-    glm::vec3 color;
-    glm::vec3 edgeColor;
-    float edgeThickness;
-
-    WireCube(glm::vec3 position,
-             glm::vec3 color,
-             glm::vec3 edgeColor,
-             float edgeThickness);
-
-    ~WireCube();
-
-    void draw(std::shared_ptr<Shader> shader) override;
-
-private:
-    unsigned int VAO_faces, VAO_edges;
-    unsigned int VBO, EBO_faces, EBO_edges;
-    int numFaceIndices, numEdgeIndices;
-
-    void setupMesh();
+    Mesh(std::string objfile, glm::vec3 position, glm::vec3 color);
+    ~Mesh() override;
 };
