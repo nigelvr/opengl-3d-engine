@@ -83,7 +83,7 @@ int main(int argc, char* argv[]) {
     world.shader->installVec3("lightColor", lightColor);
     world.shader->installInt("numLights", sizeof(lightSources)/sizeof(lightSources[0]));
 
-    auto cubex = SimpleCube(glm::vec3( 0.0f,  0.0f, 0.0f), glm::vec3(0.0f, 0.5f, 1.0f));
+    auto cubex = SimpleCube(glm::vec3( 0.0f,  0.0f, 0.0f), glm::vec3(0.0f, 0.5f, 1.0f), false);
 
     // === Render Loop ===
     int curTick, lastTick=0, deltaTick;

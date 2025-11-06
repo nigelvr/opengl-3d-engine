@@ -72,10 +72,11 @@ void Renderable::draw(std::shared_ptr<Shader> shader)
 }
 
 
-SimpleCube::SimpleCube(glm::vec3 position, glm::vec3 color)
+SimpleCube::SimpleCube(glm::vec3 position, glm::vec3 color, bool wireFrame)
 {
     this->color = color;
     this->model = glm::translate(glm::mat4(1.0f), position);
+    this->wireFrame = wireFrame;
 
     setupMesh();
 }
