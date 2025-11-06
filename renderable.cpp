@@ -8,36 +8,57 @@
 
 #include "shader.h"
 
-std::tuple<std::vector<float>, std::vector<int>> extractVerticies(std::string filename) {
-    std::ifstream file(filename);
-    
-    std::vector<float> vx_coords;
+std::pair<std::vector<Vertex>, std::vector<unsigned int>> parseObjFile(std::string filename) {
+    std::vector<glm::vec3> vx_coords;
     std::vector<int> vx_idxs;
+    std::vector<glm::vec3> normal_coords;
+    std::vector<int> normal_idxs;
+    std::vector<glm::vec2> uv_coords;
     std::vector<int> uv_idxs;
-    std::string line;
 
+    std::ifstream file(filename);
+    std::string line;
     while (std::getline(file, line)) {
         std::istringstream linestream(line);
         std::string type;
         linestream >> type;
-
+        glm::vec3 v;
+        glm::vec2 u;
         if (type == "v") {
-            glm::vec3 v;
             linestream >> v.x >> v.y >> v.z;
-            vx_coords.push_back(v.x);
-            vx_coords.push_back(v.y);
-            vx_coords.push_back(v.z);
+            vx_coords.push_back(v);
+        } else if (type == "vt") {
+            linestream >> u.x >> u.y;
+            uv_coords.push_back(u);
+        } else if (type == "vn") {
+            linestream >> v.x >> v.y >> v.z;
+            normal_coords.push_back(v);
         } else if (type == "f") {
             std::string part;
             for (int i = 0; i < 3; i++) {
                 linestream >> part;
                 int v,t,n;
                 sscanf(part.c_str(), "%u/%u/%u", &v, &t, &n);
-                vx_idxs.push_back(v-1);
+                vx_idxs.push_back(v);
+                uv_idxs.push_back(t);
+                normal_idxs.push_back(n);
             }
         }
     }
-    return std::make_tuple(vx_coords, vx_idxs);
+
+    std::vector<Vertex> vxs;
+    std::vector<unsigned int> idxs;
+    glm::vec3 v;
+    glm::vec2 u;
+    glm::vec3 n;
+    for (int i = 0; i < vx_idxs.size(); i++) {
+        v = vx_coords[vx_idxs[i]-1];
+        n = normal_coords[normal_idxs[i]-1];
+        u = uv_coords[uv_idxs[i]-1];
+        vxs.push_back(Vertex(v,n,u));
+        idxs.push_back(i);
+    }
+    return std::make_pair(vxs, idxs);
 }
 
 void Renderable::draw(std::shared_ptr<Shader> shader)
@@ -68,37 +89,11 @@ SimpleCube::~SimpleCube()
 
 void SimpleCube::setupMesh()
 {
-    unsigned int indices[] = {
-        0, 1, 2, 2, 3, 0,   // back
-        4, 5, 6, 6, 7, 4,   // front
-        0, 1, 5, 5, 4, 0,   // bottom
-        2, 3, 7, 7, 6, 2,   // top
-        0, 3, 7, 7, 4, 0,   // left
-        1, 2, 6, 6, 5, 1    // right
-    };
+    auto objdata = parseObjFile("assets/models/cube.obj");
+    std::vector<Vertex> vxs = objdata.first;
+    std::vector<unsigned int> idxs = objdata.second;
 
-    auto meshdata = extractVerticies("assets/models/cube.obj");
-    auto vxs = std::get<0>(meshdata);
-    auto idxs = std::get<1>(meshdata); 
-    for (int i = 0; i < vxs.size(); i++) {
-        if (i % 3 == 0) {
-            printf("\n");
-        }
-        printf("%f ", vxs[i]);
-    }
-    printf("\n");
-
-    for (int i = 0; i < idxs.size(); i++) {
-        if (i % 6 == 0) {
-            printf("\n");
-        }
-        printf("%d ", idxs[i]);
-    }
-    printf("\n");
-
-
-
-    numIndices = sizeof(indices) / sizeof(indices[0]);
+    printf("Vertices: %zu, Indices: %zu\n", vxs.size(), idxs.size());
 
     glGenVertexArrays(1, &VAO);
     glGenBuffers(1, &VBO);
@@ -107,16 +102,27 @@ void SimpleCube::setupMesh()
     glBindVertexArray(VAO);
 
     glBindBuffer(GL_ARRAY_BUFFER, VBO);
-    glBufferData(GL_ARRAY_BUFFER, vxs.size()*sizeof(float), vxs.data(), GL_STATIC_DRAW);
+    glBufferData(GL_ARRAY_BUFFER, vxs.size()*sizeof(Vertex), vxs.data(), GL_STATIC_DRAW);
 
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
-    glBufferData(GL_ELEMENT_ARRAY_BUFFER, idxs.size()*sizeof(int), idxs.data(), GL_STATIC_DRAW);
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, idxs.size()*sizeof(unsigned int), idxs.data(), GL_STATIC_DRAW);
 
-    // position attribute
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
+    // position
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)0);
     glEnableVertexAttribArray(0);
 
+    // normal
+    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)offsetof(Vertex, normal));
+    glEnableVertexAttribArray(1);
+
+    // uv
+    glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)offsetof(Vertex, uv));
+    glEnableVertexAttribArray(2);
+
     glBindVertexArray(0);
+
+    numIndices = idxs.size();
+
 }
 
 WireCube::WireCube(glm::vec3 position,

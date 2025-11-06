@@ -4,12 +4,23 @@
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <memory>
-#include <cstddef>      // for std::size_t (used by GLsizei)
+#include <cstddef>
 
 #include "shader.h"
-// #include "vertex_data.h"   // (not used in the original file)
 
-class Shader;           // forward declaration – enough for std::shared_ptr<Shader>
+class Shader;
+
+struct Vertex {
+    glm::vec3 pos;
+    glm::vec3 normal;
+    glm::vec2 uv;
+
+    Vertex(glm::vec3 v, glm::vec3 n, glm::vec2 u) {
+        this->pos = v;
+        this->normal = n;
+        this->uv = u;
+    }
+};
 
 class Renderable {
 public:
