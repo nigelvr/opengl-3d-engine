@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <utility>
 #include <string>
+#include <filesystem>
 
 #include <SDL2/SDL.h>
 
@@ -27,7 +28,7 @@ int main(int argc, char* argv[]) {
     bool debug = false;
     bool screenshot = false;
     bool fullscreen = false;
-    std::string objpath = "./data/cube.data";
+    std::string objdirpath = "./assets/models/cube";
     for (int i = 0; i < argc; i++) {
         std::string arg = argv[i];
         if (arg == "-s" || arg == "--screenshot") {
@@ -36,7 +37,7 @@ int main(int argc, char* argv[]) {
             debug = true;
         } else if (arg == "--data") {
             assert(i+1 < argc);
-            objpath = argv[i+1];
+            objdirpath = argv[i+1];
         } else if (arg == "-f" || arg == "--fullscreen") {
             fullscreen = true;
         }
@@ -82,8 +83,11 @@ int main(int argc, char* argv[]) {
     world.shader->installVec3("objectColor", objectColor);
     world.shader->installVec3("lightColor", lightColor);
     world.shader->installInt("numLights", sizeof(lightSources)/sizeof(lightSources[0]));
+    world.shader->installBool("useTexture", true);
 
-    auto obj = Mesh("assets/models/woody/woody.obj", glm::vec3( 0.0f,  0.0f, 0.0f), glm::vec3(0.0f, 0.5f, 1.0f));
+    std::filesystem::path fs_objfilepath(objdirpath);
+    auto objfilepath = objdirpath + "/" + fs_objfilepath.filename().string() + ".obj";
+    auto obj = Mesh(objfilepath, glm::vec3( 0.0f,  0.0f, 0.0f), glm::vec3(0.0f, 0.5f, 1.0f));
 
     // === Render Loop ===
     int curTick, lastTick=0, deltaTick;

@@ -30,6 +30,7 @@ public:
     unsigned int VAO_edges, EBO_edges; // for wireframe
     unsigned int numVertexIndices = 0;
     unsigned int numEdgeIndices = 0;
+    unsigned int diffuseTexID = 0;
 
     virtual void draw(std::shared_ptr<Shader> shader, bool wireFrame);
     virtual ~Renderable() = default;

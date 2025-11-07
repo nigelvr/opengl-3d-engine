@@ -1,6 +1,10 @@
+#define TINYOBJLOADER_IMPLEMENTATION
+
 #include <iostream>
 #include <unordered_set>
 #include <set>
+#include <tiny_obj_loader.h>
+#include <stb_image.h>
 
 #include "renderable.h"
 
@@ -9,6 +13,8 @@
 #include <glm/gtc/matrix_transform.hpp>
 
 #include "shader.h"
+
+
 
 std::vector<unsigned int> generateEdgeIndices(const std::vector<unsigned int>& triangleIndices) {
     std::vector<unsigned int> edgeIndices;
@@ -111,6 +117,12 @@ void Renderable::draw(std::shared_ptr<Shader> shader, bool wireFrame)
         glDrawElements(GL_LINES, numEdgeIndices, GL_UNSIGNED_INT, 0);
     }
 
+    if (diffuseTexID) {
+        glActiveTexture(GL_TEXTURE0);
+        glBindTexture(GL_TEXTURE_2D, diffuseTexID);
+        shader->installInt("diffuseTex", 0);
+    }
+
     // reset state
     glBindVertexArray(0);
 }
@@ -125,6 +137,17 @@ Mesh::Mesh(std::string objfile, glm::vec3 position, glm::vec3 color) {
     std::vector<unsigned int> edgeIdxs = std::get<2>(objdata);
     numVertexIndices = idxs.size();
     numEdgeIndices = edgeIdxs.size();
+
+    tinyobj::ObjReader reader;
+    tinyobj::ObjReaderConfig config;
+    config.triangulate = true;
+    config.mtl_search_path = "./assets/models/dino";
+
+    if (!reader.ParseFromFile(objfile, config)) {
+        if (!reader.Error().empty())
+            std::cerr << "TinyObj error: " << reader.Error() << std::endl;
+        return;
+    }
 
     printf("numEdgeIndices = %d\n", numEdgeIndices);
 
@@ -173,6 +196,40 @@ Mesh::Mesh(std::string objfile, glm::vec3 position, glm::vec3 color) {
     // --- 6. Unbind for safety ---
     glBindVertexArray(0);
     glBindBuffer(GL_ARRAY_BUFFER, 0);
+
+
+    // MTL file
+    const auto& attrib = reader.GetAttrib();
+    const auto& shapes = reader.GetShapes();
+    const auto& materials = reader.GetMaterials();
+    // printf("materials: %d\n", );
+    //std::cout << materials.empty() << std::endl;
+    //std::cout << materials[0].diffuse_texname << std::endl;
+    
+    if (!materials.empty() && !materials[0].diffuse_texname.empty()) {
+        std::string texPath = "./assets/models/dino/" + materials[0].diffuse_texname;
+        std::cout << "Loading texture: " << texPath << std::endl;
+
+        glGenTextures(1, &diffuseTexID);
+        glBindTexture(GL_TEXTURE_2D, diffuseTexID);
+
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
+        int w, h, nrChannels;
+        stbi_set_flip_vertically_on_load(true);
+        unsigned char* data = stbi_load(texPath.c_str(), &w, &h, &nrChannels, 0);
+        if (data) {
+            GLenum format = (nrChannels == 4) ? GL_RGBA : GL_RGB;
+            glTexImage2D(GL_TEXTURE_2D, 0, format, w, h, 0, format, GL_UNSIGNED_BYTE, data);
+            glGenerateMipmap(GL_TEXTURE_2D);
+        } else {
+            std::cerr << "Failed to load texture: " << texPath << std::endl;
+        }
+        stbi_image_free(data);
+    }
 }
 
 Mesh::~Mesh()
