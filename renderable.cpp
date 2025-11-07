@@ -104,11 +104,12 @@ void Renderable::draw(std::shared_ptr<Shader> shader, bool wireFrame)
     glBindVertexArray(VAO);
     glDrawElements(GL_TRIANGLES, numVertexIndices, GL_UNSIGNED_INT, 0);
 
-    // --- Draw bold edges ---
-    shader->installVec3("objectColor", glm::vec3(0.0f, 0.0f, 0.0f));
-    glLineWidth(10.0);
-    glBindVertexArray(VAO_edges);
-    glDrawElements(GL_LINES, numEdgeIndices, GL_UNSIGNED_INT, 0);
+    if (wireFrame) {
+        shader->installVec3("objectColor", glm::vec3(0.0f, 0.0f, 0.0f));
+        glLineWidth(10.0);
+        glBindVertexArray(VAO_edges);
+        glDrawElements(GL_LINES, numEdgeIndices, GL_UNSIGNED_INT, 0);
+    }
 
     // reset state
     glBindVertexArray(0);

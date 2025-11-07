@@ -83,7 +83,7 @@ int main(int argc, char* argv[]) {
     world.shader->installVec3("lightColor", lightColor);
     world.shader->installInt("numLights", sizeof(lightSources)/sizeof(lightSources[0]));
 
-    auto cubex = Mesh("assets/models/cube.obj", glm::vec3( 0.0f,  0.0f, 0.0f), glm::vec3(0.0f, 0.5f, 1.0f)); // SimpleCube(glm::vec3( 0.0f,  0.0f, 0.0f), glm::vec3(0.0f, 0.5f, 1.0f));
+    auto obj = Mesh("assets/models/woody.obj", glm::vec3( 0.0f,  0.0f, 0.0f), glm::vec3(0.0f, 0.5f, 1.0f));
 
     // === Render Loop ===
     int curTick, lastTick=0, deltaTick;
@@ -130,7 +130,7 @@ int main(int argc, char* argv[]) {
         world.clearScreen();
         world.updateLights();
         // world.draw();
-        cubex.draw(world.shader, false);
+        obj.draw(world.shader, false);
 
         SDL_GL_SwapWindow(window);
         deltaTime = glfwGetTime() - deltaTime;
